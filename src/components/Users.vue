@@ -14,13 +14,14 @@
         </div>
       </div>
     </div>
+
     <div class="user-list">
-      <div class="user" v-for="i in 30" v-bind:key="i">
+      <div class="user" v-for="(item,index) in 30" v-bind:key="index" @click="choose(index)" :class="hello">
         <div class="avatar">
           <img src="@/img/user.png" />
         </div>
         <span class="name">你的名字</span>
-        <span class="detail">{{i}}</span>
+        <span class="detail">{{index}}</span>
       </div>
     </div>
   </div>
@@ -32,7 +33,11 @@ export default {
     return {};
   },
   computed: {},
-  methods: {},
+  methods: {
+    choose(e) {
+      console.log(e);
+    }
+  }
 };
 </script>
 
@@ -111,7 +116,7 @@ export default {
   width: 26px;
   height: 26px;
 }
-.user-list{
+.user-list {
   overflow-y: scroll;
   overflow-x: hidden;
   height: calc(100% - 116px);

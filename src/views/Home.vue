@@ -1,9 +1,16 @@
 <template>
   <div class="home">
-    <!-- <Login></Login> -->
+    <template v-if="session===''">
+    <Login></Login>
+    </template>
+    <template v-else>
     <Users class="users"></Users>
-    <button v-on:click="onPost" style="width:140px;height: 140px; position: relative; top:-400px;">onpost</button>
+    <!-- <button
+      v-on:click="onPost"
+      style="width:140px;height: 140px; position: relative; top:-400px;"
+    >onpost</button> -->
     <Radio class="radio"></Radio>
+    </template>
   </div>
 </template>
 
@@ -13,10 +20,11 @@ import Radio from "@/components/Radio.vue";
 import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import { apiService, HTTP_TYPE } from "@/services/api";
-
+import store from '@/store'
 
 export default {
   name: "home",
+  store,
   http: {
     headers: {
       Authorization: ""
@@ -27,41 +35,24 @@ export default {
     Login,
     Users
   },
+  data: function(){
+    let userid = '390363';
+    let username = 'bunny';
+    let password = 'webonline';
+    let session = store.state.session;
+    let objectUserId = '';
+      return {
+        session,
+        userid,
+        username,
+        objectUserId,
+      }
+  },
   methods: {
-    httpPost(e) {
-      console.log("hello!");
-      this.$http({
-        url: "/backend",
-        method: "POST",
-        // 请求体重发送的数据
-        data: {
-          method: "REG",
-          username: "cat",
-          password: "web-online",
-          version: "1.0"
-        },
-        // 设置请求头
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }).then(
-        res => {
-          debugger;
-        },
-        err => {
-          debugger;
-        }
-      );
-    },
-    async onPost() {
-      let param = {
-        method: "REG",
-        username: "cat",
-        password: "web-online",
-        version: "1.0"
-      };
-      let res = await apiService(HTTP_TYPE.POST, `/backend/`, param);
+    async onPost(param) {
+      let res = await apiService(HTTP_TYPE.POST, `/backend`,param);
       console.log(res);
+      return res;
     },
   }
 };

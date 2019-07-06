@@ -9,26 +9,12 @@
 </template>
 
 <script>
-import { apiService, HTTP_TYPE } from "@/services/api";
 
 export default {
   el: "app",
   components: {},
   methods: {
-    async onPost() {
-      let param = {
-        method: "REG",
-        username: "cat",
-        password: "web-online",
-        version: "1.0"
-      };
-      let res = await apiService(
-        HTTP_TYPE.POST,
-        `backend`,
-        param
-      );
-      console.log(res);
-    }
+
   }
 };
 </script>

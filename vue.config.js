@@ -4,7 +4,7 @@ module.exports = {
   devServer: {
     proxy: {
       '/backend': {
-        target: 'http://10.112.163.194',
+        target: 'http://10.112.163.194/manage',
         changeOrigin: true,
         secure: false,
         pathRewrite: {
