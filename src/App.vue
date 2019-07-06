@@ -3,19 +3,45 @@
     <!-- <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
-    </div> -->
-    <router-view/>
+    </div>-->
+    <router-view />
   </div>
 </template>
 
+<script>
+import { apiService, HTTP_TYPE } from "@/services/api";
+
+export default {
+  el: "app",
+  components: {},
+  methods: {
+    async onPost() {
+      let param = {
+        method: "REG",
+        username: "cat",
+        password: "web-online",
+        version: "1.0"
+      };
+      let res = await apiService(
+        HTTP_TYPE.POST,
+        `backend`,
+        param
+      );
+      console.log(res);
+    }
+  }
+};
+</script>
+
+
 <style lang="scss">
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  background: url('img/bgimg.jpg') no-repeat 50%;
+  background: url("img/bgimg.jpg") no-repeat 50%;
   background-size: cover;
   height: 100%;
   width: 100%;
