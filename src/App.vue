@@ -11,10 +11,8 @@
 <script>
 
 export default {
-  el: "app",
   components: {},
   methods: {
-
   }
 };
 </script>

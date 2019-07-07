@@ -1,7 +1,7 @@
 <template>
   <div class="home">
-    <template v-if="session===''">
-    <Login></Login>
+    <template v-if="!ToF">
+    <Login class="login" @logedIn="logedin"></Login>
     </template>
     <template v-else>
     <Users class="users"></Users>
@@ -19,12 +19,12 @@
 import Radio from "@/components/Radio.vue";
 import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
-import { apiService, HTTP_TYPE } from "@/services/api";
+
+import { onPost } from "@/services/api";
 import store from '@/store'
 
 export default {
   name: "home",
-  store,
   http: {
     headers: {
       Authorization: ""
@@ -36,12 +36,13 @@ export default {
     Users
   },
   data: function(){
-    let userid = '390363';
-    let username = 'bunny';
+    let userid = store.state.userid;
+    let username = store.state.username;
     let password = 'webonline';
     let session = store.state.session;
     let objectUserId = '';
       return {
+        ToF: false,
         session,
         userid,
         username,
@@ -49,11 +50,13 @@ export default {
       }
   },
   methods: {
-    async onPost(param) {
-      let res = await apiService(HTTP_TYPE.POST, `/backend`,param);
-      console.log(res);
+    async getInfo(param) {
+      let res = onPost(param);
       return res;
     },
+    logedin(tof){
+      this.ToF = tof;
+    }
   }
 };
 </script>
@@ -67,6 +70,13 @@ export default {
   margin: 30px auto;
   display: block;
   white-space: nowrap;
+}
+.login{
+  margin: auto;
+  position: relative;
+  top: 50%;
+  margin-top: -220px;
+  display: block;
 }
 .users {
   display: inline-block;

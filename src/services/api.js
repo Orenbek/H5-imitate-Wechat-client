@@ -87,4 +87,9 @@ const apiService = (type, url, params, progress) => {
   })
 }
 
-export { apiService, HTTP_TYPE }
+const onPost = async param => {
+  let res = await apiService(HTTP_TYPE.POST, `/backend`,param);
+  return res;
+}
+
+export { apiService, HTTP_TYPE, onPost }
