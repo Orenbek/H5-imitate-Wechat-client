@@ -113,11 +113,13 @@ export default {
 .controller img {
   width: 30px;
   height: 30px;
+  border-radius: 15px;
+}
+.controller img:hover{
+  background-color: #999;
 }
 img.play {
   margin: 0 10px;
-  width: 30px;
-  height: 30px;
 }
 @keyframes rotate {
   from {

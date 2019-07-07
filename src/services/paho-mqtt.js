@@ -76,10 +76,13 @@ function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
   client.disconnect();
 };
+
  * </pre></code>
  * @namespace Paho.MQTT
  */
 
+
+ 
 /* jshint shadow:true */
 (function ExportLibrary(root, factory) {
   if (typeof exports === 'object' && typeof module === 'object') {

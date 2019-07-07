@@ -18,7 +18,6 @@
           </span>
         </td>
       </tr>
-      <Toast v-if="logedIn" toastText="啦啦啦"/>
     </template>
     <template v-else>
       <tr class="ap">
@@ -59,7 +58,7 @@
 <script>
 import store from "@/store";
 import { onPost } from "@/services/api";
-import Toast from "@/components/Toast.vue";
+
 export default {
   data() {
     return {
@@ -72,12 +71,15 @@ export default {
     };
   },
   components: {
-    Toast,
   },
   mounted: function() {},
   computed: {},
   methods: {
     onSwitch() {
+      this.username = '';
+      this.password = '';
+      this.repeat = '';
+      this.userid = '';
       if (this.regOrLog === "注册") {
         this.regOrLog = "登录";
         return;

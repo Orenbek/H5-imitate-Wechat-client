@@ -6,22 +6,24 @@
         <span>Go_st</span>
       </div>
       <div class="tab">
-        <div class="tab-item">
-          <img src="@/img/wx_sel.png" alt="聊天" />
+        <div @click="chat" class="tab-item">
+          <img v-if="radioOrChat==='chat'" src="@/img/wx_sel.png" alt="聊天" />
+          <img v-else src="@/img/wx_desel.png" alt="聊天">
         </div>
-        <div class="tab-item">
-          <img src="@/img/radio_off.png" alt="电台" />
+        <div @click="radio" class="tab-item">
+          <img v-if="radioOrChat==='radio'" src="@/img/radio_on.png" alt="电台">
+          <img v-else src="@/img/radio_off.png" alt="电台" />
         </div>
       </div>
     </div>
 
     <div class="user-list">
-      <div class="user" v-for="(item,index) in 30" v-bind:key="index" @click="choose(index)" :class="hello">
+      <div class="user" v-for="(item,index) in userList" v-bind:key="index" @click="choose(index)">
         <div class="avatar">
           <img src="@/img/user.png" />
         </div>
-        <span class="name">你的名字</span>
-        <span class="detail">{{index}}</span>
+        <span class="name">ID为 {{item}} 的用户</span>
+        <span class="detail">聊天内容</span>
       </div>
     </div>
   </div>
@@ -29,13 +31,25 @@
 
 <script>
 export default {
-  data() {
-    return {};
+  props:{
+    userList: Array,
   },
-  computed: {},
+  data() {
+    return {
+      radioOrChat: "chat"
+    };
+  },
+  computed: {
+  },
   methods: {
     choose(e) {
       console.log(e);
+    },
+    chat(){
+      this.radioOrChat = 'chat';
+    },
+    radio(){
+      this.radioOrChat = 'radio';
     }
   }
 };
@@ -157,6 +171,7 @@ export default {
 }
 .detail {
   display: block;
+  text-align: left;
   color: #989898;
   font-size: 13px;
   max-width: 200px;

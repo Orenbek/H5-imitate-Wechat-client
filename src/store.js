@@ -65,6 +65,12 @@ export default new Vuex.Store({
       session: '',
       version: "1.0"
     },
+    INFO:{
+      method: "method",
+      userid: '',
+      session: '',
+      version: ''
+    }
   },
   mutations: {
     set(state,{key,val}){
