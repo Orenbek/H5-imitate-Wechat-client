@@ -81,7 +81,6 @@ function onMessageArrived(message) {
  * @namespace Paho.MQTT
  */
 
-
  
 /* jshint shadow:true */
 (function ExportLibrary(root, factory) {

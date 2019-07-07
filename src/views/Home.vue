@@ -21,15 +21,11 @@ import Radio from "@/components/Radio.vue";
 import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import Toast from "@/components/Toast.vue";
-
 import { onPost } from "@/services/api";
-import { onPost } from "@/services/api";
-
 import store from "@/store";
 
 export default {
   name: "home",
-  store,
   http: {
     headers: {
       Authorization: ""

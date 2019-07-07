@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div @click="mqttClient" class="container">
     <div class="log-title">{{regOrLog}}</div>
     <template v-if="regOrLog==='登录'">
       <tr class="ap">
@@ -58,6 +58,8 @@
 <script>
 import store from "@/store";
 import { onPost } from "@/services/api";
+import { connect, AsyncClient } from "@/services/mqtt-wrapper/index.js";
+const mqtt = require("mqtt");
 
 export default {
   data() {
@@ -67,19 +69,18 @@ export default {
       userid: "",
       password: "",
       repeat: "",
-      logedIn: false,
+      logedIn: false
     };
   },
-  components: {
-  },
+  components: {},
   mounted: function() {},
   computed: {},
   methods: {
     onSwitch() {
-      this.username = '';
-      this.password = '';
-      this.repeat = '';
-      this.userid = '';
+      this.username = "";
+      this.password = "";
+      this.repeat = "";
+      this.userid = "";
       if (this.regOrLog === "注册") {
         this.regOrLog = "登录";
         return;
@@ -127,7 +128,7 @@ export default {
                 ) {
                   this.userid = data.userid;
                 } else {
-                  this.password = '';
+                  this.password = "";
                 }
                 this.regOrLog = "登录";
               }
@@ -152,27 +153,36 @@ export default {
         let res = onPost(LOGIN);
         res
           .then(res => {
-            if(!res.data.err){
+            if (!res.data.err) {
               this.logedIn = true;
-              this.$emit('logedIn',this.logedIn);
+              this.$emit("logedIn", this.logedIn);
               let param = {
-              userid: res.data.userid,
-              session: res.data.session,
-              username: res.data.username
-            }
-            store.commit('initParam',param);
+                userid: res.data.userid,
+                session: res.data.session,
+                username: res.data.username
+              };
+              store.commit("initParam", param);
             }
           })
           .catch(err => {
-             alert("发生了些错误，请重新登录！");
+            alert("发生了些错误，请重新登录！");
           });
       }
-  },
-  validate() {
-    if (this.password !== this.repeat) {
+    },
+    validate() {
+      if (this.password !== this.repeat) {
         return false;
       }
-    return true;
+      return true;
+    },
+    mqttClient() {
+      var client = mqtt.connect(store.state.mqttServ);
+      const asyncClient = new AsyncClient(client);
+      debugger;
+      asyncClient.publish("foo/bar", "baz").then(() => {
+        console.log("We async now");
+        return asyncClient.end();
+      });
     }
   }
 };
