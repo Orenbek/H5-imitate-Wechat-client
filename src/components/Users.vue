@@ -1,10 +1,12 @@
 <template>
   <div class="container">
     <div class="fixed">
-      <div class="header">
-        <img src="@/img/my_avatar.jpg" />
-        <span>Go_st</span>
+      <div class="header" v-if="avatarSrc!==''">
+        <img :src="avatarSrc"/>
+        <span>{{myName}}</span>
+        <input class="fileUp" type="file" @change="customizeAvatar" ref="inputer" accept="image/png,image/jpeg,image/gif,image/jpg"/>
       </div>
+
       <div class="tab">
         <div @click="chat" class="tab-item">
           <img v-if="radioOrChat==='chat'" src="@/img/wx_sel.png" alt="聊天" />
@@ -33,10 +35,12 @@
 export default {
   props:{
     userList: Array,
+    myName: String
   },
   data() {
     return {
-      radioOrChat: "chat"
+      radioOrChat: "chat",
+      avatarSrc: '@/img/user.png'
     };
   },
   computed: {
@@ -52,6 +56,28 @@ export default {
     radio(){
       this.radioOrChat = 'radio';
       this.$emit("change", this.radioOrChat);
+    },
+    customizeAvatar(){
+      let vm = this;
+        let inputDOM = this.$refs.inputer;
+        // 通过DOM取文件数据
+        let file = inputDOM.files;
+        let length = inputDOM.files.length;
+        if(length>1){
+          // alert('图片个数只能是一个！');
+          this.imglen = length;
+          return false;
+        }
+        let size = Math.floor(file[0].size / 1024);
+          if (size > 5*1024*1024) {
+            alert('请选择5M以内的图片！');
+            return false;
+          }
+          var reader = new FileReader();
+          reader.readAsDataURL(file[0]);
+          reader.onload = function () {
+          vm.avatarSrc = this.result;
+        }; 
     }
   }
 };
@@ -182,6 +208,14 @@ export default {
   white-space: nowrap;
   word-wrap: normal;
   height: 1.5em;
+}
+.fileUp{
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 15px;
+  left: 30px;
+  opacity: 0;
 }
 
 /*定义滚动条宽高及背景，宽高分别对应横竖滚动条的尺寸*/

@@ -25,10 +25,10 @@ export default {
 <style scoped>
 .toast {
   position: fixed;
-  z-index: 2000;
+  z-index: 1000;
   left: 50%;
   top: 18%;
-  transition: all 0.5s;
+  transition: all 2s;
   -webkit-transform: translateX(-50%) translateY(-50%);
   -moz-transform: translateX(-50%) translateY(-50%);
   -ms-transform: translateX(-50%) translateY(-50%);

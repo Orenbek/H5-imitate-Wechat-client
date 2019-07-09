@@ -1,24 +1,36 @@
 <template>
   <div class="container">
-    <div>show</div>
+    <div>
+      
+    </div>
+    <Toast v-if="imglen>1" toastText="只能选择一张图片！"/>
     <div class="buttom">
       <div class="controller">
-        <img src="@/img/delete.png" alt="清除" />
+        <img @click="ondelete" src="@/img/delete.png" alt="清除" />
         <img style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
       </div>
-      <textarea class="textarea" cols="" rows="" autofocus placeholder="在此输入发送的消息..."></textarea>
+      <textarea class="textarea" v-model="notedata" autofocus placeholder="在此输入发送的消息..."></textarea>
     </div>
   </div>
 </template>
 
 <script>
+import Toast from "@/components/Toast.vue";
 export default {
   props: {},
+  components: {
+    Toast,
+  },
   data() {
-    return {};
+    return {avatarSrc: '',imglen: 0,notedata:''};
   },
   mounted: function() {},
-  methods: {}
+  methods: {
+    ondelete(){
+      this.notedata = '';
+    },
+    
+  }
 };
 </script>
 
@@ -50,7 +62,7 @@ export default {
   margin-top: 2px;
 }
 .textarea {
-    display: block;
+  display: block;
   font-size: 16px;
   width: 100%;
   height: 150px;

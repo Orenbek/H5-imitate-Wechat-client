@@ -1,11 +1,12 @@
 <template>
   <div class="home">
-    <template v-if="!ToF">
+    <!-- <template v-if="!ToF"> -->
+    <template v-if="false">
       <Login class="login" @logedIn="logedin"></Login>
     </template>
     <template v-else>
       <Toast toastText="登录成功"/>
-      <Users class="users" v-bind:userList="userList" @change="ChangeSubject"/>
+      <Users class="users" v-bind:userList="userList" :myName="myName" @change="ChangeSubject"/>
       <Chat class="chat" v-if='radioOrChat==="chat"'/>
       <Radio v-if='radioOrChat==="radio"' class="radio" />
      
@@ -50,7 +51,8 @@ export default {
       username,
       objectUserId,
       userList: [],
-      radioOrChat: 'chat'
+      radioOrChat: 'chat',
+      myName: 'Go_st'
     };
   },
   methods: {
