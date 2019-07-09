@@ -47,9 +47,11 @@ export default {
     },
     chat(){
       this.radioOrChat = 'chat';
+      this.$emit("change", this.radioOrChat);
     },
     radio(){
       this.radioOrChat = 'radio';
+      this.$emit("change", this.radioOrChat);
     }
   }
 };

@@ -5,12 +5,9 @@
     </template>
     <template v-else>
       <Toast toastText="登录成功"/>
-      <Users class="users" v-bind:userList="userList"></Users>
-      <!-- <button
-      v-on:click="ont"
-      style="width:140px;height: 140px; position: relative; top:-400px;"
-      >onpost</button> -->
-      <Radio class="radio"></Radio>
+      <Users class="users" v-bind:userList="userList" @change="ChangeSubject"/>
+      <Chat class="chat" v-if='radioOrChat==="chat"'/>
+      <Radio v-if='radioOrChat==="radio"' class="radio" />
      
     </template>
   </div>
@@ -22,6 +19,7 @@ import Radio from "@/components/Radio.vue";
 import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import Toast from "@/components/Toast.vue";
+import Chat from "@/components/Chat.vue";
 import { onPost } from "@/services/api";
 import store from "@/store";
 
@@ -36,7 +34,8 @@ export default {
     Radio,
     Login,
     Users,
-    Toast
+    Toast,
+    Chat
   },
   data: function() {
     let userid = store.state.userid;
@@ -50,7 +49,8 @@ export default {
       userid,
       username,
       objectUserId,
-      userList: []
+      userList: [],
+      radioOrChat: 'chat'
     };
   },
   methods: {
@@ -75,14 +75,8 @@ export default {
         //userList去重。
       });
     },
-    ont(){
-      let INFO = store.state.INFO;
-      let res = onPost(INFO)
-      res.then(res=>{
-          let data = res.data;
-      }).catch(err=>{
-          console.log(err);
-      })
+    ChangeSubject(radioOrChat){
+      this.radioOrChat = radioOrChat;
     }
   }
 };
@@ -109,6 +103,10 @@ export default {
   display: inline-block;
 }
 .radio {
+  display: inline-block;
+  width: calc(100% - 280px);
+}
+.chat{
   display: inline-block;
   width: calc(100% - 280px);
 }
