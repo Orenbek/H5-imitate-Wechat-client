@@ -67,10 +67,10 @@ export default new Vuex.Store({
       version: "1.0"
     },
     INFO:{
-      method: "method",
+      method: "INFO",
       userid: '',
       session: '',
-      version: ''
+      version: '1.0'
     }
   },
   mutations: {

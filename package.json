@@ -14,7 +14,9 @@
     "mqtt-connection": "^4.0.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
-    "vuex": "^3.0.1"
+    "vuex": "^3.0.1",
+    "websocket": "^1.0.29",
+    "ws": "^7.1.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.9.0",

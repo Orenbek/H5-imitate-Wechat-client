@@ -7,10 +7,11 @@
       <Toast toastText="登录成功"/>
       <Users class="users" v-bind:userList="userList"></Users>
       <!-- <button
-      v-on:click="onPost"
+      v-on:click="ont"
       style="width:140px;height: 140px; position: relative; top:-400px;"
-      >onpost</button>-->
+      >onpost</button> -->
       <Radio class="radio"></Radio>
+     
     </template>
   </div>
 </template>
@@ -73,6 +74,15 @@ export default {
         that.userList = Array.from(new Set([...originlist, ...newlist]));
         //userList去重。
       });
+    },
+    ont(){
+      let INFO = store.state.INFO;
+      let res = onPost(INFO)
+      res.then(res=>{
+          let data = res.data;
+      }).catch(err=>{
+          console.log(err);
+      })
     }
   }
 };
