@@ -1,12 +1,12 @@
 <template>
   <div class="container">
     <div class="fixed">
-      <div class="header" v-if="avatarSrc!==''">
-        <img :src="avatarSrc"/>
+      <div class="header" >
+        <img v-if="avatarSrc !==''" v-bind:src="avatarSrc" alt="">
+        <img v-else src="@/img/my_avatar.jpg"/>
         <span>{{myName}}</span>
         <input class="fileUp" type="file" @change="customizeAvatar" ref="inputer" accept="image/png,image/jpeg,image/gif,image/jpg"/>
       </div>
-
       <div class="tab">
         <div @click="chat" class="tab-item">
           <img v-if="radioOrChat==='chat'" src="@/img/wx_sel.png" alt="聊天" />
@@ -20,8 +20,14 @@
     </div>
 
     <div class="user-list">
-      <div class="user" v-for="(item,index) in userList" v-bind:key="index" @click="choose(index)">
-      <!-- <div class="user" v-for="(item,index) in 10" v-bind:key="index" @click="choose(index)"> -->
+      <div class="user" v-for="(item1,index1) in myUserList" v-bind:key="index1" @click="choose(index1)">
+        <div class="avatar">
+          <img src="@/img/myuser.png" />
+        </div>
+        <span class="name">ID为 {{item1}} 的用户</span>
+        <span class="detail">聊天内容</span>
+      </div>
+      <div class="user" v-for="(item,index) in userList" v-bind:key="index">
         <div class="avatar">
           <img src="@/img/user.png" />
         </div>
@@ -37,19 +43,21 @@ import store from "@/store";
 export default {
   props:{
     userList: Array,
-    myName: String
+    myName: String,
+    myUserList: Array
   },
   data() {
     return {
       radioOrChat: "chat",
-      avatarSrc: '@/img/user.png'
+      avatarSrc: '@/img/my_avatar.jpg',
+      imglen: 0
     };
   },
   computed: {
   },
   methods: {
     choose(e) {
-      store.commit('set',{key: 'choosenId',val:this.userList[e]});
+      store.commit('set',{key: 'choosenId',val:this.myUserList[e]});
     },
     chat(){
       this.radioOrChat = 'chat';
@@ -65,9 +73,9 @@ export default {
         // 通过DOM取文件数据
         let file = inputDOM.files;
         let length = inputDOM.files.length;
+        this.imglen = length;
         if(length>1){
           // alert('图片个数只能是一个！');
-          this.imglen = length;
           return false;
         }
         let size = Math.floor(file[0].size / 1024);
@@ -80,7 +88,8 @@ export default {
           reader.onload = function () {
           vm.avatarSrc = this.result;
         }; 
-    }
+    },
+    
   }
 };
 </script>

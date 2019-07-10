@@ -1,15 +1,15 @@
 <template>
   <div class="home">
-    <!-- <template v-if="!ToF"> -->
-    <template v-if="false">
+    <template v-if="!ToF">
+    <!-- <template v-if="false"> -->
       <Login class="login" @logedIn="logedin"></Login>
     </template>
     <template v-else>
       <Toast toastText="登录成功"/>
-      <Users class="users" :userList="userList" :myName="myName" @change="ChangeSubject"/>
+      <Users class="users" :userList="userList" :myName="myName" :myUserList="myUserList" @change="ChangeSubject"/>
       <Chat class="chat" v-if='radioOrChat==="chat"'/>
       <Radio v-if='radioOrChat==="radio"' class="radio" />
-     
+     <button @click="ws">点我</button>
     </template>
   </div>
 </template>
@@ -52,7 +52,8 @@ export default {
       objectUserId,
       userList: [],
       radioOrChat: 'chat',
-      myName: 'Go_st'
+      myName: 'Go_st',
+      myUserList: []
     };
   },
   methods: {
@@ -71,10 +72,43 @@ export default {
         let originlist = that.userList;
         that.userList = Array.from(new Set([...originlist, ...newlist]));
         //userList去重。
+        this.ws();
+        //获取当前我的服务器上的在线用户
       });
     },
     ChangeSubject(radioOrChat){
       this.radioOrChat = radioOrChat;
+    },
+    ws() {
+      var ws = new WebSocket("ws://localhost:8000");
+      ws.onopen = function(evt) {
+        console.log("Connection open ...");
+        if (ws.readyState == WebSocket.OPEN) { 
+          
+          let m = {
+            mes : '连接成功',
+            userid: store.state.userid,
+            objectid: []
+          }
+          if(store.state.choosenId!==[]){
+            m.objectid.push(store.state.choosenId)
+          }
+          let message = JSON.stringify(m);
+          ws.send(message);
+        }
+        
+      };
+      ws.onmessage = function(event) {
+        console.log("Received Message: " + event.data);
+        let result = JSON.parse(event.data);
+      };
+
+      //[【于指定连接关闭后的回调函数。】
+      ws.onclose = function(evt) {
+        console.log("Connection closed.");
+      };
+      ws.onerror = function(event) {};
+
     }
   }
 };

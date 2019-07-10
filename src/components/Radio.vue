@@ -16,7 +16,6 @@
 </template>
 
 <script>
-import Toast from "@/components/Toast.vue";
 var mqtt = require("mqtt");
 export default {
   data() {

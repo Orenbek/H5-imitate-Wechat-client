@@ -1,7 +1,6 @@
 <template>
   <div class="container">
     <div></div>
-    <Toast v-if="imglen>1" toastText="只能选择一张图片！" />
     <div class="buttom">
       <div class="controller">
         <img @click="onDelete" src="@/img/delete.png" alt="清除" />
@@ -13,7 +12,6 @@
 </template>
 
 <script>
-import Toast from "@/components/Toast.vue";
 import { onPost } from "@/services/api";
 import store from "@/store";
 export default {
@@ -21,10 +19,9 @@ export default {
 
     },
   components: {
-    Toast
   },
   data() {
-    return { avatarSrc: "", imglen: 0, notedata: "" };
+    return { avatarSrc: "", notedata: "" };
   },
   mounted: function() {},
   methods: {
