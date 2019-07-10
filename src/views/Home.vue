@@ -1,16 +1,18 @@
 <template>
   <div class="home">
-    <template v-if="!ToF">
+    <!-- <template v-if="!ToF"> -->
     <!-- <template v-if="false"> -->
-      <Login class="login" @logedIn="logedin"></Login>
-    </template>
-    <template v-else>
+      <!-- <Login class="login" @logedIn="logedin"></Login> -->
+    <!-- </template> -->
+    <!-- <template v-else>
       <Toast toastText="登录成功"/>
       <Users class="users" :userList="userList" :myName="myName" :myUserList="myUserList" @change="ChangeSubject"/>
-      <Chat class="chat" v-if='radioOrChat==="chat"'/>
+      <Chat class="chat" v-if='radioOrChat==="chat"' :content="send"/>
       <Radio v-if='radioOrChat==="radio"' class="radio" />
      <button @click="ws">点我</button>
-    </template>
+    </template> -->
+    <!-- <Chat class="chat" :content="send"/> -->
+    <au></au>
   </div>
 </template>
 
@@ -21,6 +23,7 @@ import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import Toast from "@/components/Toast.vue";
 import Chat from "@/components/Chat.vue";
+import au from "@/components/audio.vue";
 import { onPost } from "@/services/api";
 import store from "@/store";
 
@@ -36,7 +39,8 @@ export default {
     Login,
     Users,
     Toast,
-    Chat
+    Chat,
+    au
   },
   data: function() {
     let userid = store.state.userid;
@@ -79,14 +83,14 @@ export default {
     ChangeSubject(radioOrChat){
       this.radioOrChat = radioOrChat;
     },
-    ws() {
+    ws(val) {
       var ws = new WebSocket("ws://localhost:8000");
       ws.onopen = function(evt) {
         console.log("Connection open ...");
         if (ws.readyState == WebSocket.OPEN) { 
           
           let m = {
-            mes : '连接成功',
+            mes : val,
             userid: store.state.userid,
             objectid: []
           }
@@ -109,6 +113,9 @@ export default {
       };
       ws.onerror = function(event) {};
 
+    },
+    send(val){
+      this.ws(val);
     }
   }
 };
