@@ -3,7 +3,7 @@
     <div class="fixed">
       <div class="header" >
         <img v-if="avatarSrc !==''" v-bind:src="avatarSrc" alt="">
-        <img v-else src="@/img/my_avatar.jpg"/>
+        <!-- <img src="@/img/my_avatar.jpg"/> -->
         <span>{{myName}}</span>
         <input class="fileUp" type="file" @change="customizeAvatar" ref="inputer" accept="image/png,image/jpeg,image/gif,image/jpg"/>
       </div>
@@ -47,13 +47,17 @@ export default {
     myUserList: Array
   },
   data() {
+    let publicPath = process.env.BASE_URL
+    store.commit('set',{key:'myAvatar',val: `${publicPath}my_avatar.jpg`})
     return {
       radioOrChat: "chat",
-      avatarSrc: '@/img/my_avatar.jpg',
-      imglen: 0
+      avatarSrc: `${publicPath}my_avatar.jpg`,
     };
   },
   computed: {
+    setAvatar(){
+      this.avatarSrc;
+    }
   },
   methods: {
     choose(e) {
@@ -73,7 +77,6 @@ export default {
         // 通过DOM取文件数据
         let file = inputDOM.files;
         let length = inputDOM.files.length;
-        this.imglen = length;
         if(length>1){
           // alert('图片个数只能是一个！');
           return false;
@@ -87,6 +90,7 @@ export default {
           reader.readAsDataURL(file[0]);
           reader.onload = function () {
           vm.avatarSrc = this.result;
+          store.commit('set',{key:'myAvatar',val: vm.avatarSrc});
         }; 
     },
     
@@ -227,6 +231,7 @@ export default {
   top: 15px;
   left: 30px;
   opacity: 0;
+  cursor: pointer;
 }
 
 /*定义滚动条宽高及背景，宽高分别对应横竖滚动条的尺寸*/

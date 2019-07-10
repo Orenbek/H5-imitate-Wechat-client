@@ -1,16 +1,24 @@
 <template>
   <div class="container">
-    <button @click="onInitWs">点我</button>
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
         <li v-for="(item, index) in currentChunkList" :key="index" class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
-          <div class="avatar"></div>
+          <img class="avatar" :src="myAvatar">
           <div v-cloak class="audio" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
             <span>(</span>
             <span>(</span>
             <span>(</span>
           </div>
           <div class="duration">{{item.duration}}"</div>
+        </li>
+        <li v-for="(item, index) in currentChunkList" :key="index" class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
+          <div class="avatar1"></div>
+          <div v-cloak class="audio1" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
+            <span>)</span>
+            <span>)</span>
+            <span>)</span>
+          </div>
+          <div class="duration1">{{item.duration}}"</div>
         </li>
       </transition-group>
       <audio ref="audio"></audio>
@@ -34,28 +42,44 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
+var ws;
 // const ws = new WebSocket("ws://localhost:8000");
 export default {
   props: {},
   components: {},
   data() {
     let choosenId = store.state.choosenId;
+    let myAvatar = store.state.myAvatar;
     return {
-      avatarSrc: "",
+      myAvatar,
       notedata: "",
       chunks: [],
       btnText: "按住说话",
       chatList: [],
+      //包含整个语音消息，包含我的和对方的
+      noteList: [],
+      //包含整个文字信息，包含我的和对方的
+      currentNoteList: [],
+      //包含当前我和当前用户之间的文字消息
       currentChunkList:[],
+      //包含当前我的当前用户之间的语音消息
+      currentMessage: [],
+      //包含当前我和当前用户之间的所有消息
       choosenId: choosenId?choosenId:'',
     };
   },
   computed: {
     getChoosenId() {
-      this.choosenId = state.store.choosenId;
+      this.choosenId = store.state.choosenId;
     },
     getCurrentChunkList(){
       this.currentChunkList = this.chatList[this.choosenId];
+    },
+    getCurrentNoteList(){
+      this.currentNoteList = this.noteList[this.choosenId];
+    },
+    getAvatar(){
+      this.myAvatar = store.state.myAvatar;
     }
   },
   mounted: function() {
@@ -76,7 +100,7 @@ export default {
       this.notedata = "";
     },
     onInitWs() {
-    var ws = new WebSocket("ws://localhost:8000");
+    ws = new WebSocket("ws://localhost:8000");
     ws.addEventListener('open',this.wsOpen);
     ws.addEventListener('message',this.wsMessage);
     ws.addEventListener('close',this.wsClose);
@@ -102,6 +126,17 @@ export default {
       }
       console.log("Received Message: " + event.data);
       let result = JSON.parse(event.data);
+      switch(result.type){
+        case 'audio':
+          this.wsReceiveAudio(result);
+          break;
+        case 'video':
+          this.wsReceiveVideo(result);
+          break;
+        case 'text':
+          this.wsReceiveText(result);
+          break;  
+      }
     },
     wsClose(event){
       console.log('已经关闭连接');
@@ -134,6 +169,17 @@ export default {
         type: 'audio'
       };
       this.wsSend(m);
+    },
+    wsReceiveText(val){
+
+      this.noteList[this.choosenId].push(val.mes);
+      this.currentNoteList;
+    },
+    wsReceiveAudio(val){
+      console.log(val)
+    },
+    wsReceiveVideo(val){
+      console.log(val)
     },
 
     requestAudioAccess() {
@@ -223,7 +269,7 @@ export default {
       if (duration > 60) {
         duration = 60;
       }
-      wsSendAudio(audioStream,duration);
+      this.wsSendAudio(audioStream,duration);
 
       let choosenId = this.choosenId;
       let chunkList = this.chatList[choosenId];
@@ -276,6 +322,7 @@ export default {
   width: 24px;
   height: 24px;
   margin-top: 2px;
+  cursor: pointer;
 }
 .textarea {
   display: block;
@@ -335,7 +382,21 @@ export default {
 .msg-list .msg .duration {
 	float: right;
 }
+.msg-list .msg .avatar1,
+.msg-list .msg .audio1,
+.msg-list .msg .duration1 {
+	float: left;
+}
 .msg-list .msg .avatar {
+	width: 24px;
+	height: 24px;
+	line-height: 24px;
+	text-align: center;
+	background-color: #000;
+	/* background: url('https://denzel.netlify.com/hero.png') 0 0; */
+	background-size: 100%;
+}
+.msg-list .msg .avatar1 {
 	width: 24px;
 	height: 24px;
 	line-height: 24px;
@@ -356,6 +417,19 @@ export default {
 	color: #000;
 	text-align: right;
 	background-color: rgba(107, 197, 107, 0.85);
+}
+.msg-list .msg .audio1 {
+	position: relative;
+	margin-left: 6px;
+	max-width: 116px;
+	min-width: 30px;
+	height: 24px;
+	line-height: 24px;
+	padding: 0 4px 0 10px;
+	border-radius: 2px;
+	color: #000;
+	text-align: left;
+	background-color: rgba(194, 194, 194, 0.678);
 }
 .msg-list .msg.eg {
 	cursor: default;
@@ -394,7 +468,47 @@ export default {
 .msg-list .msg .audio.wink span {
 	animation: wink 1s ease infinite;
 }
+
+
+.msg-list .msg.eg .audio1 {
+	text-align: left;
+}
+.msg-list .msg .audio1:before {
+	position: absolute;
+	left: -8px;
+	top: 8px;
+	content: '';
+	display: inline-block;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 4px;
+	border-color: transparent rgba(194, 194, 194, 0.678) transparent transparent;
+}
+.msg-list .msg .audio1 span {
+	color: rgba(255, 255, 255, .8);
+	display: inline-block;
+	transform-origin: center;
+}
+.msg-list .msg .audio1 span:nth-child(3) {
+	font-weight: 400;
+}
+.msg-list .msg .audio1 span:nth-child(2) {
+	transform: scale(0.8);
+	font-weight: 500;
+}
+.msg-list .msg .audio1 span:nth-child(1) {
+	transform: scale(0.5);
+	font-weight: 700
+}
+.msg-list .msg .audio1.wink span {
+	animation: wink 1s ease infinite;
+}
+
 .msg-list .msg .duration {
+	margin: 3px 2px;
+}
+.msg-list .msg .duration1 {
 	margin: 3px 2px;
 }
 .fade-enter-active, .fade-leave-active {
