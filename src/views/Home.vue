@@ -1,18 +1,17 @@
 <template>
   <div class="home">
-    <!-- <template v-if="!ToF"> -->
-    <!-- <template v-if="false"> -->
-      <!-- <Login class="login" @logedIn="logedin"></Login> -->
-    <!-- </template> -->
-    <!-- <template v-else>
+    <!-- <template v-if="!ToF">
+      <Login class="login" @logedIn="logedin"></Login>
+    </template>
+    <template v-else>
       <Toast toastText="登录成功"/>
       <Users class="users" :userList="userList" :myName="myName" :myUserList="myUserList" @change="ChangeSubject"/>
-      <Chat class="chat" v-if='radioOrChat==="chat"' :content="send"/>
+      <Chat class="chat" v-if='radioOrChat==="chat"'/>
       <Radio v-if='radioOrChat==="radio"' class="radio" />
      <button @click="ws">点我</button>
     </template> -->
-    <Chat class="chat" :content="send"/>
-    <au></au>
+    <Chat class="chat"/>
+    <!-- <au></au> -->
   </div>
 </template>
 
@@ -114,9 +113,7 @@ export default {
       ws.onerror = function(event) {};
 
     },
-    send(val){
-      this.ws(val);
-    }
+
   }
 };
 </script>

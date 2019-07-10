@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <button @click="onInitWs">点我</button>
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
         <li v-for="(item, index) in currentChunkList" :key="index" class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
@@ -22,7 +23,7 @@
           @mouseup="onMouseup" @touchend.prevent="onMouseup">摄像头</div>
         <div class="controller">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
-          <img @click="onSend" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
+          <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
         </div>
       </div>
       <textarea class="textarea" v-model="notedata" autofocus placeholder="在此输入发送的消息..."></textarea>
@@ -33,6 +34,7 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
+// const ws = new WebSocket("ws://localhost:8000");
 export default {
   props: {},
   components: {},
@@ -66,22 +68,72 @@ export default {
       return;
     }
     this.audio = this.$refs.audio;
-    this.m = store.state.m;
     this.requestAudioAccess();
+    this.onInitWs();
   },
   methods: {
     onDelete() {
       this.notedata = "";
     },
-    onSend() {
-      // let that = this;
-      // let param = store.state.CHAT;
-      // param.request[0] = store.state.choosenId;
-      // let res = onPost(param);
-      // res.then(res => {
-      //   console.log(res);
-      // });
-      this.$emit("content", this.notedata);
+    onInitWs() {
+    var ws = new WebSocket("ws://localhost:8000");
+    ws.addEventListener('open',this.wsOpen);
+    ws.addEventListener('message',this.wsMessage);
+    ws.addEventListener('close',this.wsClose);
+    ws.addEventListener('error',this.wsError);
+    //readyState属性返回实例对象的当前状态，共有四种。
+    //CONNECTING：值为0，表示正在连接。
+    //OPEN：值为1，表示连接成功，可以通信了。
+    //CLOSING：值为2，表示连接正在关闭。
+    //CLOSED：值为3，表示连接已经关闭，或者打开连接失败
+    //例如：if (ws.readyState == WebSocket.CONNECTING) { }
+
+    },
+    wsOpen(e){
+      console.log('connected! ',e);
+    },
+    wsMessage(event){
+      if (typeof event.data === String) {
+        console.log("Received data string",event);
+      }
+      if (event.data instanceof ArrayBuffer) {
+        var buffer = event.data;
+        console.log("Received arraybuffer");
+      }
+      console.log("Received Message: " + event.data);
+      let result = JSON.parse(event.data);
+    },
+    wsClose(event){
+      console.log('已经关闭连接');
+    },
+    wsError(){
+      console.log('连接出现问题')
+    },
+    wsSend(message) {
+      if (ws.readyState == WebSocket.OPEN) { 
+        message = JSON.stringify(message);
+        ws.send(message);
+      } else{
+        alert('已经断开socket连接，请重新连接websocket服务器')
+      }
+    },
+    wsSendText(){
+      let m = {
+        mes : this.notedata,
+        userid: store.state.userid,
+        objectid: [this.choosenId],
+        type: 'text'
+      }
+      this.wsSend(m);
+    },
+    wsSendAudio(audioStream,duration){
+      let m = {
+        mes : audioStream,
+        userid: store.state.userid,
+        objectid: [this.choosenId],
+        type: 'audio'
+      };
+      this.wsSend(m);
     },
 
     requestAudioAccess() {
@@ -171,6 +223,8 @@ export default {
       if (duration > 60) {
         duration = 60;
       }
+      wsSendAudio(audioStream,duration);
+
       let choosenId = this.choosenId;
       let chunkList = this.chatList[choosenId];
       if (!chunkList) {
@@ -180,6 +234,13 @@ export default {
       chunkList.push({ duration: duration, stream: audioStream });
       this.chatList[choosenId] = chunkList;
       this.chunks = [];
+      this.currentChunkList = chunkList;
+      // this.$nextTick(()=>{
+      //   this.chatList[choosenId] = chunkList;
+      //   this.currentChunkList = chunkList;
+      //   this.chunks = [];
+      // })
+      //事件循环机制，放到下一个循环去渲染。
     }
   }
 };
