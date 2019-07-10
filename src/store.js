@@ -5,6 +5,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     mqttServ: 'mqtt://10.112.163.194',
+    choosenId:'',
     session: '',
     username: 'bunny',
     userid: '390363',

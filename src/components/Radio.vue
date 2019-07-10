@@ -9,7 +9,7 @@
     <div class="song-name">歌曲名字</div>
     <div class="controller">
       <img src="@/img/previous.png" />
-      <img class="play" src="@/img/play.png" />
+      <img @click="mqtt" class="play" src="@/img/play.png" />
       <img src="@/img/next.png" />
     </div>
   </div>
@@ -17,9 +17,10 @@
 
 <script>
 import Toast from "@/components/Toast.vue";
+var mqtt = require("mqtt");
 export default {
   data() {
-    return { playOrPause: '@/img/play.png' };
+    return { playOrPause: "@/img/play.png" };
   },
   computed: {
     // playOrPause: function(){
@@ -33,14 +34,21 @@ export default {
   },
   methods: {
     onTap() {
-      if (this.playOrPause === '@/img/play.png') {
-        this.playOrPause = '@/img/pause.png';
+      if (this.playOrPause === "@/img/play.png") {
+        this.playOrPause = "@/img/pause.png";
       } else {
-        this.playOrPause = '@/img/play.png';
+        this.playOrPause = "@/img/play.png";
       }
       return this.playOrPause;
     },
-  },
+    mqtt() {
+      var client = mqtt.connect("mqtt://10.112.163.194/", { port: 1883 });
+      client.on("connect", function() {
+        console.log("connected");
+        debugger;
+      });
+    }
+  }
 };
 </script>
 
@@ -116,7 +124,7 @@ export default {
   height: 30px;
   border-radius: 15px;
 }
-.controller img:hover{
+.controller img:hover {
   background-color: #999;
 }
 img.play {

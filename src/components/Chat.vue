@@ -1,13 +1,11 @@
 <template>
   <div class="container">
-    <div>
-      
-    </div>
-    <Toast v-if="imglen>1" toastText="只能选择一张图片！"/>
+    <div></div>
+    <Toast v-if="imglen>1" toastText="只能选择一张图片！" />
     <div class="buttom">
       <div class="controller">
-        <img @click="ondelete" src="@/img/delete.png" alt="清除" />
-        <img style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
+        <img @click="onDelete" src="@/img/delete.png" alt="清除" />
+        <img @click="onSend" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
       </div>
       <textarea class="textarea" v-model="notedata" autofocus placeholder="在此输入发送的消息..."></textarea>
     </div>
@@ -16,20 +14,32 @@
 
 <script>
 import Toast from "@/components/Toast.vue";
+import { onPost } from "@/services/api";
+import store from "@/store";
 export default {
-  props: {},
+  props: { 
+
+    },
   components: {
-    Toast,
+    Toast
   },
   data() {
-    return {avatarSrc: '',imglen: 0,notedata:''};
+    return { avatarSrc: "", imglen: 0, notedata: "" };
   },
   mounted: function() {},
   methods: {
-    ondelete(){
-      this.notedata = '';
+    onDelete() {
+      this.notedata = "";
     },
-    
+    onSend() {
+      let that = this;
+      let param = store.state.CHAT;
+      param.request[0] = store.state.choosenId;
+      let res = onPost(param);
+      res.then(res => {
+        console.log(res);
+      });
+    }
   }
 };
 </script>

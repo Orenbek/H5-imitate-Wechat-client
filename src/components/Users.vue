@@ -21,6 +21,7 @@
 
     <div class="user-list">
       <div class="user" v-for="(item,index) in userList" v-bind:key="index" @click="choose(index)">
+      <!-- <div class="user" v-for="(item,index) in 10" v-bind:key="index" @click="choose(index)"> -->
         <div class="avatar">
           <img src="@/img/user.png" />
         </div>
@@ -32,6 +33,7 @@
 </template>
 
 <script>
+import store from "@/store";
 export default {
   props:{
     userList: Array,
@@ -47,7 +49,7 @@ export default {
   },
   methods: {
     choose(e) {
-      console.log(e);
+      store.commit('set',{key: 'choosenId',val:this.userList[e]});
     },
     chat(){
       this.radioOrChat = 'chat';

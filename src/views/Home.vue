@@ -6,7 +6,7 @@
     </template>
     <template v-else>
       <Toast toastText="登录成功"/>
-      <Users class="users" v-bind:userList="userList" :myName="myName" @change="ChangeSubject"/>
+      <Users class="users" :userList="userList" :myName="myName" @change="ChangeSubject"/>
       <Chat class="chat" v-if='radioOrChat==="chat"'/>
       <Radio v-if='radioOrChat==="radio"' class="radio" />
      
@@ -56,10 +56,6 @@ export default {
     };
   },
   methods: {
-    async getInfo(param) {
-      let res = onPost(param);
-      return res;
-    },
     logedin(tof) {
       this.ToF = tof;
       this.getUserList();
