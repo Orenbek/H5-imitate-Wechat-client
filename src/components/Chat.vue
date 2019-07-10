@@ -12,6 +12,7 @@
           <div class="duration">{{item.duration}}"</div>
         </li>
       </transition-group>
+      <audio ref="audio"></audio>
     </div>
     <div class="buttom">
       <div class="bq">
@@ -36,13 +37,15 @@ export default {
   props: {},
   components: {},
   data() {
+    let choosenId = store.state.choosenId;
     return {
       avatarSrc: "",
       notedata: "",
       chunks: [],
       btnText: "按住说话",
-      chatList: new Map(),
-      currentChunkList:[]
+      chatList: [],
+      currentChunkList:[],
+      choosenId: choosenId?choosenId:'',
     };
   },
   computed: {
@@ -50,7 +53,7 @@ export default {
       this.choosenId = state.store.choosenId;
     },
     getCurrentChunkList(){
-      this.currentChunkList = this.chatList.get(this.choosenId);
+      this.currentChunkList = this.chatList[this.choosenId];
     }
   },
   mounted: function() {
@@ -113,9 +116,10 @@ export default {
 
     onPlay(index) {
       let choosenId = this.choosenId;
-      let chunkList = this.chatList.get(choosenId);
+      let chunkList = this.chatList[choosenId];
       if (!chunkList) {
-        this.chatList.set(choosenId, []);
+        this.chatList[choosenId] = [];
+        chunkList = [];
       }
       chunkList.forEach(item => {
         this.$set(item, "wink", false);
@@ -130,9 +134,10 @@ export default {
 
     bindAudioEvent(index) {
       let choosenId = this.choosenId;
-      let chunkList = this.chatList.get(choosenId);
+      let chunkList = this.chatList[choosenId];
       if (!chunkList) {
-        this.chatList.set(choosenId, []);
+        this.chatList[choosenId] = [];
+        chunkList = [];
       }
       let item = chunkList[index];
 
@@ -167,11 +172,13 @@ export default {
         duration = 60;
       }
       let choosenId = this.choosenId;
-      let chunkList = this.chatList.get(choosenId);
+      let chunkList = this.chatList[choosenId];
       if (!chunkList) {
-        this.chatList.set(choosenId, []);
+        this.chatList[choosenId] = [];
+        chunkList = [];
       }
       chunkList.push({ duration: duration, stream: audioStream });
+      this.chatList[choosenId] = chunkList;
       this.chunks = [];
     }
   }
@@ -196,6 +203,7 @@ export default {
   /* border-top: 1px solid #bfbfbf; */
   box-shadow: 0 -1px 1px rgba(0, 0, 0, 0.1);
   background: #e6e6e6;
+  height: 180px;
 }
 .bq {
   height: 28px;
@@ -212,7 +220,7 @@ export default {
   display: block;
   font-size: 16px;
   width: 100%;
-  height: 150px;
+  height: 145px;
   border: none;
 }
 .phone-operate {
@@ -239,8 +247,8 @@ export default {
   animation: loading 1s ease-in-out infinite backwards;
 }
 .phone-content {
-	height: 282px;
-	background-color: #f1eded;
+	height: calc(100% - 180px);
+  background: #e6e6e6;
 }
 
 

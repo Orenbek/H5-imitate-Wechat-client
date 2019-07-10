@@ -88,7 +88,8 @@ export default {
             });
 
             let item = this.chunkList[index];
-            this.audio.src = item.stream;
+			this.audio.src = item.stream;
+			debugger;
             this.audio.play();
 
             this.bindAudioEvent(index);

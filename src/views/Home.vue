@@ -11,7 +11,7 @@
       <Radio v-if='radioOrChat==="radio"' class="radio" />
      <button @click="ws">点我</button>
     </template> -->
-    <!-- <Chat class="chat" :content="send"/> -->
+    <Chat class="chat" :content="send"/>
     <au></au>
   </div>
 </template>
