@@ -22,11 +22,11 @@
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
-        <li v-for="(itemm ,indexx) in this.noteList[this.choosenId]" :key="indexx" class="textlist te1">
+        <li v-for="(item1 ,index1) in this.noteList[this.choosenId]" :key="index1" class="textlist te1">
            <img class="avatar av1" :src="myAvatar"/>
           <div class="textmes tm1">
             <div class="textcontent tt1">
-                <pre class="pre">{{itemm.mes}}</pre>
+                <pre class="pre">{{item1.mes}}</pre>
             </div>
           </div>
         </li>
@@ -144,12 +144,7 @@ export default {
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
-      let initParam = {
-        userid: store.state.userid,
-        objectid: [''],
-        type: "init"
-      }
-      this.wsSend(initParam);
+      
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -159,6 +154,12 @@ export default {
     },
     wsOpen(e) {
       console.log("connected! ", e);
+      let initParam = {
+        userid: store.state.userid,
+        objectid: [''],
+        type: "init"
+      }
+      this.wsSend(initParam);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -204,6 +205,18 @@ export default {
         type: "text"
       };
       this.wsSend(m);
+      //收到的消息，应该push进发来消息对应的userid下面
+      if(!this.index[this.choosenId]){
+        this.index[this.choosenId] = 0;
+      }
+      this.index[this.choosenId] += 1;
+      m.index = this.index[this.choosenId];
+      let arr = this.noteList[this.choosenId];
+      if(arr===undefined){
+        arr = [];
+      }
+      arr.push(m);
+      this.$set(this.noteList,this.choosenId,arr);
     },
     wsSendAudio(audioStream, duration) {
       let m = {
@@ -214,6 +227,18 @@ export default {
         type: "audio"
       };
       this.wsSend(m);
+      //收到的消息，应该push进发来消息对应的userid下面
+      if(!this.index[this.choosenId]){
+        this.index[this.choosenId] = 0;
+      }
+      this.index[this.choosenId] += 1;
+      m.index = this.index[this.choosenId];
+      let arr = this.chatList[this.choosenId];
+      if(arr===undefined){
+        arr = [];
+      }
+      arr.push(m);
+      this.$set(this.chatList,this.choosenId,arr);
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
@@ -227,12 +252,21 @@ export default {
         arr = [];
       }
       arr.push(val);
-      // this.noteList[val.userid]=arr;
-
       this.$set(this.noteList,val.userid,arr);
     },
     wsReceiveAudio(val) {
       console.log(val);
+      if(!this.index[val.userid]){
+        this.index[val.userid] = 0;
+      }
+      this.index[val.userid] += 1;
+      val.index = this.index[val.userid];
+      let arr = this.chatList[val.userid];
+      if(arr===undefined){
+        arr = [];
+      }
+      arr.push(val);
+      this.$set(this.chatList,val.userid,arr);
     },
     wsReceiveVideo(val) {
       console.log(val);
@@ -327,7 +361,6 @@ export default {
       }
       this.wsSendAudio(audioStream, duration);
 
-
       let choosenId = this.choosenId;
       let chunkList = this.chatList[choosenId];
       if (!chunkList) {
@@ -337,7 +370,8 @@ export default {
       this.index[choosenId]+=1;
       chunkList.push({ duration: duration, stream: audioStream, 
       type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
-      this.chatList[choosenId] = chunkList;
+      this.$set(this.chatList,choosenId,chunkList);
+      // this.chatList[choosenId] = chunkList;
       this.chunks = [];
       // this.$nextTick(()=>{
       //   this.chatList[choosenId] = chunkList;
