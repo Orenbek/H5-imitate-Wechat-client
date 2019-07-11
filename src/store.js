@@ -10,7 +10,7 @@ export default new Vuex.Store({
     myAvatar: '',
     session: '',
     username: 'bunny',
-    userid: '390363',
+    userid: '1',
     password: 'webonline',
     REG: {
       method: "REG",

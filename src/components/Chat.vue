@@ -60,6 +60,8 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
+import { format } from 'path';
+const crypto = require('crypto');
 var ws;
 // const ws = new WebSocket("ws://localhost:8000");
 // 遍历currentMessage
@@ -94,6 +96,7 @@ export default {
   data() {
     let choosenId = store.state.choosenId;
     let myAvatar = store.state.myAvatar;
+    let bufferBlob;
     return {
       myAvatar,
       notedata: "",
@@ -109,8 +112,11 @@ export default {
       // //包含当前我的当前用户之间的语音消息
       // currentMessage: [],
       // //包含当前我和当前用户之间的所有消息
+      Messages: [],
       choosenId: choosenId ? choosenId : "",
-      index:[]
+      index:[],
+      bufferParam: {},
+      bufferBlob
     };
   },
   computed: {
@@ -119,6 +125,8 @@ export default {
     },
     getAvatar() {
       this.myAvatar = store.state.myAvatar;
+    },
+    combine(){
     }
   },
   mounted: function() {
@@ -162,26 +170,34 @@ export default {
       this.wsSend(initParam);
     },
     wsMessage(event) {
+      debugger;
       if (typeof event.data === String) {
-        console.log("Received data string", event);
+        console.log("Received data string");
       }
       if (event.data instanceof ArrayBuffer) {
-        var buffer = event.data;
         console.log("Received arraybuffer");
       }
-      console.log("Received Message: " + event.data);
-      let result = JSON.parse(event.data);
-      switch (result.type) {
-        case "audio":
-          this.wsReceiveAudio(result);
-          break;
-        case "video":
-          this.wsReceiveVideo(result);
-          break;
-        case "text":
-          this.wsReceiveText(result);
-          break;
+      if(event.data instanceof Blob){
+        console.log('this is Blob!');
+        this.buffer(event);
+      } else{
+          let result = JSON.parse(event.data);
+        switch (result.type) {
+          case "audio":
+            this.wsReceiveAudio(result);
+            break;
+          case "video":
+            this.wsReceiveVideo(result);
+            break;
+          case "text":
+            this.wsReceiveText(result);
+            break;
+          case "hash":
+              this.SendItBack(result)
+            break;
+        }
       }
+      
     },
     wsClose(event) {
       console.log("已经关闭连接");
@@ -189,10 +205,14 @@ export default {
     wsError() {
       console.log("连接出现问题");
     },
-    wsSend(message) {
+    wsSend(message,blob) {
       if (ws.readyState == WebSocket.OPEN) {
         message = JSON.stringify(message);
+        if(blob){
+          ws.send(blob);
+        } else{
         ws.send(message);
+        }
       } else {
         alert("已经断开socket连接，请重新连接websocket服务器");
       }
@@ -206,39 +226,57 @@ export default {
       };
       this.wsSend(m);
       //收到的消息，应该push进发来消息对应的userid下面
-      if(!this.index[this.choosenId]){
-        this.index[this.choosenId] = 0;
+      let choosenId = this.choosenId;
+      if(!this.index[choosenId]){
+        this.index[choosenId] = 0;
       }
-      this.index[this.choosenId] += 1;
-      m.index = this.index[this.choosenId];
-      let arr = this.noteList[this.choosenId];
+      this.index[choosenId] += 1;
+      m.index = this.index[choosenId];
+      let arr = this.noteList[choosenId];
       if(arr===undefined){
         arr = [];
       }
       arr.push(m);
-      this.$set(this.noteList,this.choosenId,arr);
+      this.$set(this.noteList,choosenId,arr);
+      let M = this.Messages[choosenId];
+      if(M===undefined){
+        M = [];
+      }
+      M.push(arr);
+      this.$set(this.Messages,choosenId,M);
     },
-    wsSendAudio(audioStream, duration) {
+    wsSendAudio(blob, audioStream, duration) {
       let m = {
-        audioStream: audioStream,
         duration: duration,
         userid: store.state.userid,
         objectid: [this.choosenId],
         type: "audio"
       };
-      this.wsSend(m);
+      this.bufferParam = m;
+      this.wsSend('',blob);
+
+      let choosenId = this.choosenId;
+      if(!this.index[choosenId]){
+        this.index[choosenId] = 0;
+      }
+      this.index[choosenId]+=1;
+      
+      let chunkList = this.chatList[choosenId];
+      if (!chunkList) {
+        this.chatList[choosenId] = [];
+        chunkList = [];
+      }
+      chunkList.push({ duration: duration, stream: audioStream, 
+      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
+      this.$set(this.chatList,choosenId,chunkList);
+      this.chunks = [];
       //收到的消息，应该push进发来消息对应的userid下面
-      if(!this.index[this.choosenId]){
-        this.index[this.choosenId] = 0;
+      let M = this.Messages[choosenId];
+      if(M===undefined){
+        M = [];
       }
-      this.index[this.choosenId] += 1;
-      m.index = this.index[this.choosenId];
-      let arr = this.chatList[this.choosenId];
-      if(arr===undefined){
-        arr = [];
-      }
-      arr.push(m);
-      this.$set(this.chatList,this.choosenId,arr);
+      M.push(chunkList);
+      this.$set(this.Messages,choosenId,M);
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
@@ -253,9 +291,19 @@ export default {
       }
       arr.push(val);
       this.$set(this.noteList,val.userid,arr);
+
+      let M = this.Messages[val.userid];
+      if(M===undefined){
+        M = [];
+      }
+      M.push(arr);
+      this.$set(this.Messages,val.userid,M);
     },
+    
     wsReceiveAudio(val) {
       console.log(val);
+      let audioStream = URL.createObjectURL(this.bufferBlob);
+      val.stream = audioStream;
       if(!this.index[val.userid]){
         this.index[val.userid] = 0;
       }
@@ -267,9 +315,25 @@ export default {
       }
       arr.push(val);
       this.$set(this.chatList,val.userid,arr);
+
+      let M = this.Messages[val.userid];
+      if(M===undefined){
+        M = [];
+      }
+      M.push(arr);
+      this.$set(this.Messages,val.userid,M);
     },
     wsReceiveVideo(val) {
       console.log(val);
+    },
+    SendItBack(res){
+      console.log(res);
+      let par = this.bufferParam;
+      par.random = res.random;
+      ws.send(JSON.stringify(par))
+    },
+    buffer(event){
+      this.bufferBlob = event.data;
     },
 
     requestAudioAccess() {
@@ -352,6 +416,7 @@ export default {
         audioStream = URL.createObjectURL(blob),
         //估算时长
         duration = parseInt(blob.size / 6600);
+
       if (duration <= 0) {
         alert("说话时间太短");
         return;
@@ -359,25 +424,7 @@ export default {
       if (duration > 60) {
         duration = 60;
       }
-      this.wsSendAudio(audioStream, duration);
-
-      let choosenId = this.choosenId;
-      let chunkList = this.chatList[choosenId];
-      if (!chunkList) {
-        this.chatList[choosenId] = [];
-        chunkList = [];
-      }
-      this.index[choosenId]+=1;
-      chunkList.push({ duration: duration, stream: audioStream, 
-      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
-      this.$set(this.chatList,choosenId,chunkList);
-      // this.chatList[choosenId] = chunkList;
-      this.chunks = [];
-      // this.$nextTick(()=>{
-      //   this.chatList[choosenId] = chunkList;
-      //   this.chunks = [];
-      // })
-      //事件循环机制，放到下一个循环去渲染。
+      this.wsSendAudio(blob, audioStream,duration);
     }
   }
 };
