@@ -2,20 +2,10 @@
   <div class="container">
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
-        <li
-          v-for="(item, index) in currentChunkList"
-          :key="index"
-          class="msg"
-          @click="onPlay(index)"
-          @touchend.prevent="onPlay(index)"
-        >
+        <li v-for="(item, index) in currentChunkList" :key="index"
+          class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
           <img class="avatar" :src="myAvatar" />
-          <div
-            v-cloak
-            class="audio"
-            :style="{width: 20 * item.duration + 'px'}"
-            :class="{wink: item.wink}"
-          >
+          <div v-cloak class="audio" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
             <span>(</span>
             <span>(</span>
             <span>(</span>
@@ -30,37 +20,23 @@
           @touchend.prevent="onPlay(index)"
         >
           <div class="avatar1"></div>
-          <div
-            v-cloak
-            class="audio1"
-            :style="{width: 20 * item.duration + 'px'}"
-            :class="{wink: item.wink}"
-          >
+          <div v-cloak class="audio1" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
             <span>)</span>
             <span>)</span>
             <span>)</span>
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
+        
       </transition-group>
       <audio ref="audio"></audio>
     </div>
     <div class="buttom">
       <div class="bq">
-        <div
-          class="phone-operate"
-          @mousedown="onMousedown"
-          @touchstart.prevent="onMousedown"
-          @mouseup="onMouseup"
-          @touchend.prevent="onMouseup"
-        >{{btnText}}</div>
-        <div
-          class="phone-operate"
-          @mousedown="onMousedown"
-          @touchstart.prevent="onMousedown"
-          @mouseup="onMouseup"
-          @touchend.prevent="onMouseup"
-        >摄像头</div>
+        <div class="phone-operate" @mousedown="onMousedown" @touchstart.prevent="onMousedown"
+          @mouseup="onMouseup" @touchend.prevent="onMouseup">{{btnText}}</div>
+        <div class="phone-operate" @mousedown="onMousedown" @touchstart.prevent="onMousedown"
+          @mouseup="onMouseup" @touchend.prevent="onMouseup">摄像头</div>
         <div class="controller">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
@@ -87,7 +63,8 @@ currentMessage = [
     },
     {
       index: 1,
-      mes: "",
+      stream: "",
+      duration: 123,
       userid: "对方的id",
       objectid: "",
       type: "audio",
@@ -122,7 +99,8 @@ export default {
       //包含当前我的当前用户之间的语音消息
       currentMessage: [],
       //包含当前我和当前用户之间的所有消息
-      choosenId: choosenId ? choosenId : ""
+      choosenId: choosenId ? choosenId : "",
+      index:[]
     };
   },
   computed: {
@@ -219,7 +197,8 @@ export default {
     },
     wsSendAudio(audioStream, duration) {
       let m = {
-        mes: audioStream,
+        audioStream: audioStream,
+        duration: duration,
         userid: store.state.userid,
         objectid: [this.choosenId],
         type: "audio"
@@ -228,8 +207,11 @@ export default {
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
-      this.noteList[val.userid].push(val.mes);
-      this.currentNoteList;
+      this.index[val.userid] += 1;
+      val.index = this.index[val.userid];
+      this.noteList[val.userid].push(val);
+      // this.currentNoteList;
+      //currentNoteList需要跟踪notelist的变化。
     },
     wsReceiveAudio(val) {
       console.log(val);
@@ -327,13 +309,16 @@ export default {
       }
       this.wsSendAudio(audioStream, duration);
 
+
       let choosenId = this.choosenId;
       let chunkList = this.chatList[choosenId];
       if (!chunkList) {
         this.chatList[choosenId] = [];
         chunkList = [];
       }
-      chunkList.push({ duration: duration, stream: audioStream });
+      this.index[choosenId]+=1;
+      chunkList.push({ duration: duration, stream: audioStream, 
+      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
       this.chatList[choosenId] = chunkList;
       this.chunks = [];
       this.currentChunkList = chunkList;
