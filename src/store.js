@@ -6,12 +6,13 @@ export default new Vuex.Store({
   state: {
     mqttServ: 'mqtt://10.112.163.194',
     wsHost: "ws://localhost:8000",
-    choosenId:'1',
+    choosenId:'',
     myAvatar: '',
     session: '',
     username: 'bunny',
-    userid: '1',
+    userid: '',
     password: 'webonline',
+    userList: [],
     REG: {
       method: "REG",
       username: '',

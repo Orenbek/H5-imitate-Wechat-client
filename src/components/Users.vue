@@ -20,19 +20,23 @@
     </div>
 
     <div class="user-list">
-      <div class="user" v-for="(item1,index1) in myUserList" v-bind:key="index1" @click="choose(index1)">
+      <div v-show="radioOrChat==='radio'">
+      <div class="user" v-for="(item1,index1) in $store.state.userList" v-bind:key="index1" @click="choose(index1)">
         <div class="avatar">
           <img src="@/img/myuser.png" />
         </div>
         <span class="name">ID为 {{item1}} 的用户</span>
         <span class="detail">聊天内容</span>
       </div>
+      </div>
+       <div v-show="radioOrChat==='chat'">
       <div class="user" v-for="(item,index) in userList" v-bind:key="index">
         <div class="avatar">
           <img src="@/img/user.png" />
         </div>
         <span class="name">ID为 {{item}} 的用户</span>
         <span class="detail">聊天内容</span>
+      </div>
       </div>
     </div>
   </div>
@@ -44,7 +48,6 @@ export default {
   props:{
     userList: Array,
     myName: String,
-    myUserList: Array
   },
   data() {
     let publicPath = process.env.BASE_URL
@@ -57,11 +60,11 @@ export default {
   computed: {
     setAvatar(){
       this.avatarSrc;
-    }
+    },
   },
   methods: {
     choose(e) {
-      store.commit('set',{key: 'choosenId',val:this.myUserList[e]});
+      store.commit('set',{key: 'choosenId',val:store.state.userList[e]});
     },
     chat(){
       this.radioOrChat = 'chat';

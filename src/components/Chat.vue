@@ -35,7 +35,7 @@
            <div class="avatar av2" ></div>
           <div class="textmes tm2">
             <div class="textcontent tt2">
-                <pre class="pre">{{item.mes}}}</pre>
+                <pre class="pre">{{item.mes}}</pre>
             </div>
           </div>
         </li>
@@ -65,33 +65,6 @@ import store from "@/store";
 import { format } from 'path';
 const crypto = require('crypto');
 var ws;
-// const ws = new WebSocket("ws://localhost:8000");
-// 遍历currentMessage
-// currentMessage = [
-//     {
-//       index: 0,
-//       mes: "",
-//       userid: "我的id",
-//       objectid: "",
-//       type: "text",
-//     },
-//     {
-//       index: 1,
-//       stream: "",
-//       duration: 123,
-//       userid: "对方的id",
-//       objectid: "",
-//       type: "audio",
-//     },
-//     {
-//       index: 3,
-//       mes: "",
-//       userid: "我的id",
-//       objectid: "",
-//       type: "video",
-//     },
-// ];
-// 收到消息 先要判断宿主 根据宿主ID把信息存进chatList中
 export default {
   props: {},
   components: {},
@@ -125,10 +98,13 @@ export default {
   },
   computed: {
     getChoosenId() {
-      this.choosenId = store.state.choosenId;
+      this.choosenId = $store.state.choosenId;
     },
     getAvatar() {
-      this.myAvatar = store.state.myAvatar;
+      this.myAvatar = $store.state.myAvatar;
+    },
+    getUserid(){
+      this.userid = $store.state.userid;
     },
     combine(){
     }
@@ -172,6 +148,9 @@ export default {
         type: "init"
       }
       this.wsSend(initParam);
+      setInterval(()=>{
+        this.wsSend(initParam);
+      },20000);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -196,7 +175,10 @@ export default {
             this.wsReceiveText(result);
             break;
           case "hash":
-              this.SendItBack(result)
+            this.SendItBack(result)
+            break;
+          case "userList":
+            store.commit('set',{key:'userList',val:result.userList});
             break;
         }
       }
@@ -228,6 +210,7 @@ export default {
         type: "text"
       };
       this.wsSend(m);
+      this.notedata = '';
       //收到的消息，应该push进发来消息对应的userid下面
       let choosenId = this.choosenId;
       if(!this.index[choosenId]){

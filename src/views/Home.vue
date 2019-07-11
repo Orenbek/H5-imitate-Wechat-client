@@ -1,17 +1,16 @@
 <template>
   <div class="home">
-    <!-- <template v-if="!ToF"> -->
-    <template v-if="false">
+    <template v-if="!ToF">
+    <!-- <template v-if="false"> -->
       <Login class="login" @logedIn="logedin"></Login>
     </template>
     <template v-else>
       <Toast toastText="登录成功"/>
-      <Users class="users" :userList="userList" :myName="myName" :myUserList="myUserList" @change="ChangeSubject"/>
-      <Chat class="chat" v-show='radioOrChat==="chat"'/>
-      <Radio v-show='radioOrChat==="radio"' class="radio" />
+      <Users class="users" :userList="userList" :myName="myName" @change="ChangeSubject"/>
+      <Chat class="chat" v-show='radioOrChat==="radio"'/>
+      <Radio v-show='radioOrChat==="chat"' class="radio" />
     </template>
     <!-- <Chat class="chat"/> -->
-    <!-- <au></au> -->
   </div>
 </template>
 
@@ -22,7 +21,6 @@ import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import Toast from "@/components/Toast.vue";
 import Chat from "@/components/Chat.vue";
-import au from "@/components/audio.vue";
 import { onPost } from "@/services/api";
 import store from "@/store";
 
@@ -39,7 +37,6 @@ export default {
     Users,
     Toast,
     Chat,
-    au
   },
   data: function() {
     let userid = store.state.userid;
@@ -75,14 +72,11 @@ export default {
         let originlist = that.userList;
         that.userList = Array.from(new Set([...originlist, ...newlist]));
         //userList去重。
-        this.ws();
-        //获取当前我的服务器上的在线用户
       });
     },
     ChangeSubject(radioOrChat){
       this.radioOrChat = radioOrChat;
     },
-
   }
 };
 </script>

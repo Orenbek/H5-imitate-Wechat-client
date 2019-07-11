@@ -163,6 +163,8 @@ export default {
                 username: res.data.username
               };
               store.commit("initParam", param);
+              store.commit('set',{key:'userid', val:param.userid});
+              store.commit('set',{key:'username', val:param.username});
             }
           })
           .catch(err => {
