@@ -27,7 +27,30 @@
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
-        
+        <li :key="1" class="textlist te1">
+           <img class="avatar av1" :src="myAvatar"/>
+          <div class="textmes tm1">
+            <div class="textcontent tt1">
+                <pre class="pre">这是消息的伙食费水电费幻色粉水电费考核室深粉色发货是否合适绥芬河</pre>
+            </div>
+          </div>
+        </li>
+        <li :key="2" class="textlist te2">
+           <img class="avatar av2" :src="myAvatar"/>
+          <div class="textmes tm2">
+            <div class="textcontent tt2">
+                <pre class="pre">这</pre>
+            </div>
+          </div>
+        </li>
+        <li :key="1" class="textlist te2">
+           <img class="avatar av2" :src="myAvatar"/>
+          <div class="textmes tm2">
+            <div class="textcontent tt2">
+                <pre class="pre">这是消息的伙食费水电费幻色粉水电费考核室深粉色发货是否合适绥芬河</pre>
+            </div>
+          </div>
+        </li>
       </transition-group>
       <audio ref="audio"></audio>
     </div>
@@ -53,30 +76,30 @@ import store from "@/store";
 var ws;
 // const ws = new WebSocket("ws://localhost:8000");
 // 遍历currentMessage
-currentMessage = [
-    {
-      index: 0,
-      mes: "",
-      userid: "我的id",
-      objectid: "",
-      type: "text",
-    },
-    {
-      index: 1,
-      stream: "",
-      duration: 123,
-      userid: "对方的id",
-      objectid: "",
-      type: "audio",
-    },
-    {
-      index: 3,
-      mes: "",
-      userid: "我的id",
-      objectid: "",
-      type: "video",
-    },
-];
+// currentMessage = [
+//     {
+//       index: 0,
+//       mes: "",
+//       userid: "我的id",
+//       objectid: "",
+//       type: "text",
+//     },
+//     {
+//       index: 1,
+//       stream: "",
+//       duration: 123,
+//       userid: "对方的id",
+//       objectid: "",
+//       type: "audio",
+//     },
+//     {
+//       index: 3,
+//       mes: "",
+//       userid: "我的id",
+//       objectid: "",
+//       type: "video",
+//     },
+// ];
 // 收到消息 先要判断宿主 根据宿主ID把信息存进chatList中
 export default {
   props: {},
@@ -573,5 +596,92 @@ export default {
   to {
     width: 100%;
   }
+}
+
+.textmes{
+  word-wrap: break-word;
+  word-break: break-all;
+  min-height: 25px;
+  position: relative;
+  max-width: 182px;
+  min-width: 30px;
+  /* line-height: 24px; */
+  padding: 0 4px 0 10px;
+  border-radius: 2px;
+  color: #000;
+}
+.textmes.tm1{
+  margin-right: 6px;
+  text-align: right;
+  background-color: rgba(107, 197, 107, 0.85);
+}
+.textmes.tm2{
+  margin-left: 6px;
+  text-align: left;
+  background-color: rgba(194, 194, 194, 0.678);
+}
+.textmes.tm1:before{
+   position: absolute;
+  right: -8px;
+  top: 8px;
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-color: transparent transparent transparent rgba(107, 197, 107, 0.85);
+}
+.textmes.tm2:before{
+   position: absolute;
+  left: -8px;
+  top: 8px;
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-color: transparent rgba(194, 194, 194, 0.678) transparent transparent;
+}
+.textcontent{
+  padding: 9px 13px;
+  word-break: break-all;
+  font-size: 14px;
+}
+.textcontent.tt1{
+  text-align: left;
+}
+.textcontent.tt2{
+  text-align: right;
+}
+.pre{
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+.textlist{
+  list-style: none;
+  padding: 0 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+.textlist .tm1,
+.textlist .av1{
+  float: right;
+}
+.textlist .tm2,
+.textlist .av2{
+  float: left;
+}
+.textlist .avatar{
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  background-color: #000;
+  background-size: 100%;
 }
 </style>
