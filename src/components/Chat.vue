@@ -2,7 +2,7 @@
   <div class="container">
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
-        <li v-for="(item, index) in currentChunkList" :key="index"
+        <li v-for="(item, index) in this.chatList[this.choosenId]" :key="index"
           class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
           <img class="avatar" :src="myAvatar" />
           <div v-cloak class="audio" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
@@ -12,13 +12,8 @@
           </div>
           <div class="duration">{{item.duration}}"</div>
         </li>
-        <li
-          v-for="(item, index) in currentChunkList"
-          :key="index"
-          class="msg"
-          @click="onPlay(index)"
-          @touchend.prevent="onPlay(index)"
-        >
+        <li v-for="(item, index) in this.chatList[this.choosenId]" :key="index"
+          class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
           <div class="avatar1"></div>
           <div v-cloak class="audio1" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
             <span>)</span>
@@ -27,27 +22,19 @@
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
-        <li :key="1" class="textlist te1">
+        <li v-for="(itemm ,indexx) in this.noteList[this.choosenId]" :key="indexx" class="textlist te1">
            <img class="avatar av1" :src="myAvatar"/>
           <div class="textmes tm1">
             <div class="textcontent tt1">
-                <pre class="pre">这是消息的伙食费水电费幻色粉水电费考核室深粉色发货是否合适绥芬河</pre>
+                <pre class="pre">{{itemm.mes}}</pre>
             </div>
           </div>
         </li>
         <li :key="2" class="textlist te2">
-           <img class="avatar av2" :src="myAvatar"/>
+           <div class="avatar av2" ></div>
           <div class="textmes tm2">
             <div class="textcontent tt2">
-                <pre class="pre">这</pre>
-            </div>
-          </div>
-        </li>
-        <li :key="1" class="textlist te2">
-           <img class="avatar av2" :src="myAvatar"/>
-          <div class="textmes tm2">
-            <div class="textcontent tt2">
-                <pre class="pre">这是消息的伙食费水电费幻色粉水电费考核室深粉色发货是否合适绥芬河</pre>
+                <pre class="pre">这是消息2</pre>
             </div>
           </div>
         </li>
@@ -116,12 +103,12 @@ export default {
       //包含整个语音消息，包含我的和对方的
       noteList: [],
       //包含整个文字信息，包含我的和对方的
-      currentNoteList: [],
-      //包含当前我和当前用户之间的文字消息
-      currentChunkList: [],
-      //包含当前我的当前用户之间的语音消息
-      currentMessage: [],
-      //包含当前我和当前用户之间的所有消息
+      // currentNoteList: [],
+      // //包含当前我和当前用户之间的文字消息
+      // currentChunkList: [],
+      // //包含当前我的当前用户之间的语音消息
+      // currentMessage: [],
+      // //包含当前我和当前用户之间的所有消息
       choosenId: choosenId ? choosenId : "",
       index:[]
     };
@@ -129,12 +116,6 @@ export default {
   computed: {
     getChoosenId() {
       this.choosenId = store.state.choosenId;
-    },
-    getCurrentChunkList() {
-      this.currentChunkList = this.chatList[this.choosenId];
-    },
-    getCurrentNoteList() {
-      this.currentNoteList = this.noteList[this.choosenId];
     },
     getAvatar() {
       this.myAvatar = store.state.myAvatar;
@@ -163,6 +144,12 @@ export default {
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
+      let initParam = {
+        userid: store.state.userid,
+        objectid: [''],
+        type: "init"
+      }
+      this.wsSend(initParam);
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -230,11 +217,19 @@ export default {
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
+      if(!this.index[val.userid]){
+        this.index[val.userid] = 0;
+      }
       this.index[val.userid] += 1;
       val.index = this.index[val.userid];
-      this.noteList[val.userid].push(val);
-      // this.currentNoteList;
-      //currentNoteList需要跟踪notelist的变化。
+      let arr = this.noteList[val.userid];
+      if(arr===undefined){
+        arr = [];
+      }
+      arr.push(val);
+      // this.noteList[val.userid]=arr;
+
+      this.$set(this.noteList,val.userid,arr);
     },
     wsReceiveAudio(val) {
       console.log(val);
@@ -344,10 +339,8 @@ export default {
       type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
       this.chatList[choosenId] = chunkList;
       this.chunks = [];
-      this.currentChunkList = chunkList;
       // this.$nextTick(()=>{
       //   this.chatList[choosenId] = chunkList;
-      //   this.currentChunkList = chunkList;
       //   this.chunks = [];
       // })
       //事件循环机制，放到下一个循环去渲染。
@@ -387,6 +380,9 @@ export default {
   height: 24px;
   margin-top: 2px;
   cursor: pointer;
+}
+.controller img:hover{
+  background: rgba(133, 127, 127, 0.3);
 }
 .textarea {
   display: block;
@@ -675,6 +671,9 @@ export default {
 .textlist .tm2,
 .textlist .av2{
   float: left;
+}
+.textlist .av2{
+  background: url('https://denzel.netlify.com/hero.png') 0 0;
 }
 .textlist .avatar{
   width: 24px;
