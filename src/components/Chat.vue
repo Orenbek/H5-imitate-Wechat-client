@@ -170,7 +170,6 @@ export default {
       this.wsSend(initParam);
     },
     wsMessage(event) {
-      debugger;
       if (typeof event.data === String) {
         console.log("Received data string");
       }
@@ -242,7 +241,9 @@ export default {
       if(M===undefined){
         M = [];
       }
-      M.push(arr);
+
+      M.push(...arr)
+      M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
     },
     wsSendAudio(blob, audioStream, duration) {
@@ -275,7 +276,9 @@ export default {
       if(M===undefined){
         M = [];
       }
-      M.push(chunkList);
+      
+      M.push(...chunkList)
+      M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
     },
     wsReceiveText(val) {
@@ -296,10 +299,12 @@ export default {
       if(M===undefined){
         M = [];
       }
-      M.push(arr);
+
+      M.push(...arr)
+      M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
     },
-    
+
     wsReceiveAudio(val) {
       console.log(val);
       let audioStream = URL.createObjectURL(this.bufferBlob);
@@ -320,7 +325,9 @@ export default {
       if(M===undefined){
         M = [];
       }
-      M.push(arr);
+
+      M.push(...arr)
+      M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
     },
     wsReceiveVideo(val) {
