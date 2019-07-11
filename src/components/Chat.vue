@@ -2,7 +2,8 @@
   <div class="container">
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
-        <li v-for="(item, index) in this.chatList[this.choosenId]" :key="index"
+        <template v-for="(item, index) in this.Messages[this.choosenId]">
+        <li v-if="item.type==='audio'&&item.userid===userid" :key="index"
           class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
           <img class="avatar" :src="myAvatar" />
           <div v-cloak class="audio" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
@@ -12,7 +13,7 @@
           </div>
           <div class="duration">{{item.duration}}"</div>
         </li>
-        <li v-for="(item, index) in this.chatList[this.choosenId]" :key="index"
+        <li v-if="item.type==='audio'&&item.userid!==userid" :key="index"
           class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
           <div class="avatar1"></div>
           <div v-cloak class="audio1" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
@@ -22,22 +23,23 @@
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
-        <li v-for="(item1 ,index1) in this.noteList[this.choosenId]" :key="index1" class="textlist te1">
+        <li v-if="item.type==='text'&&item.userid===userid" :key="index" class="textlist te1">
            <img class="avatar av1" :src="myAvatar"/>
           <div class="textmes tm1">
             <div class="textcontent tt1">
-                <pre class="pre">{{item1.mes}}</pre>
+                <pre class="pre">{{item.mes}}</pre>
             </div>
           </div>
         </li>
-        <li :key="2" class="textlist te2">
+        <li v-if="item.type==='text'&&item.userid!==userid" :key="index" class="textlist te2">
            <div class="avatar av2" ></div>
           <div class="textmes tm2">
             <div class="textcontent tt2">
-                <pre class="pre">这是消息2</pre>
+                <pre class="pre">{{item.mes}}}</pre>
             </div>
           </div>
         </li>
+        </template>
       </transition-group>
       <audio ref="audio"></audio>
     </div>
@@ -96,10 +98,12 @@ export default {
   data() {
     let choosenId = store.state.choosenId;
     let myAvatar = store.state.myAvatar;
+    let userid = store.state.userid;
     let bufferBlob;
     return {
       myAvatar,
       notedata: "",
+      userid,
       chunks: [],
       btnText: "按住说话",
       chatList: [],
@@ -375,6 +379,8 @@ export default {
 
     onPlay(index) {
       let choosenId = this.choosenId;
+      let ITEM = this.Messages[choosenId][index]
+      index = this.chatList[choosenId].indexOf(ITEM);
       let chunkList = this.chatList[choosenId];
       if (!chunkList) {
         this.chatList[choosenId] = [];
