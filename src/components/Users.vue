@@ -44,6 +44,7 @@
 
 <script>
 import store from "@/store";
+import Trans from "@/assets/transport.js"
 export default {
   props:{
     userList: Array,
@@ -64,6 +65,9 @@ export default {
   },
   methods: {
     choose(e) {
+      // this.$emit('choose', store.state.userList[e]);
+      let choosenId = store.state.userList[e];
+      Trans.$emit('choose',choosenId);
       store.commit('set',{key: 'choosenId',val:store.state.userList[e]});
     },
     chat(){

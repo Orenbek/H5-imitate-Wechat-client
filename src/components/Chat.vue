@@ -63,13 +63,16 @@
 import { onPost } from "@/services/api";
 import store from "@/store";
 import { format } from 'path';
-const crypto = require('crypto');
+import Trans from "@/assets/transport.js"
 var ws;
 export default {
   props: {},
   components: {},
   data() {
-    let choosenId = store.state.choosenId;
+    // Trans.$on('choose',(data)=>{
+    //     this.choosenId = data;
+    //   })
+    // let choosenId = store.state.choosenId;
     let myAvatar = store.state.myAvatar;
     let userid = store.state.userid;
     let bufferBlob;
@@ -90,21 +93,29 @@ export default {
       // currentMessage: [],
       // //包含当前我和当前用户之间的所有消息
       Messages: [],
-      choosenId: choosenId ? choosenId : "",
+      // choosenId: choosenId ? choosenId : "",
+      choosenId: '',
       index:[],
       bufferParam: {},
       bufferBlob
     };
   },
+  created(){
+    Trans.$on('choose',(data)=>{
+        this.choosenId = data;
+      })
+  },
   computed: {
-    getChoosenId() {
-      this.choosenId = $store.state.choosenId;
+    choosenId() {
+      Trans.$on('choose',(data)=>{
+        this.choosenId = data;
+      })
     },
     getAvatar() {
-      this.myAvatar = $store.state.myAvatar;
+      // this.myAvatar = this.$store.state.myAvatar;
     },
     getUserid(){
-      this.userid = $store.state.userid;
+      // this.userid = this.$store.state.userid;
     },
     combine(){
     }
@@ -203,16 +214,17 @@ export default {
       }
     },
     wsSendText() {
+      let choosenId = this.choosenId;
+      // let choosenId = store.sate.choosenId;
       let m = {
         mes: this.notedata,
         userid: store.state.userid,
-        objectid: [this.choosenId],
+        objectid: [choosenId],
         type: "text"
       };
       this.wsSend(m);
       this.notedata = '';
       //收到的消息，应该push进发来消息对应的userid下面
-      let choosenId = this.choosenId;
       if(!this.index[choosenId]){
         this.index[choosenId] = 0;
       }
@@ -234,16 +246,17 @@ export default {
       this.$set(this.Messages,choosenId,M);
     },
     wsSendAudio(blob, audioStream, duration) {
+      // let choosenId = store.sate.choosenId;
+      let choosenId = this.choosenId;
       let m = {
         duration: duration,
         userid: store.state.userid,
-        objectid: [this.choosenId],
+        objectid: [choosenId],
         type: "audio"
       };
       this.bufferParam = m;
       this.wsSend('',blob);
 
-      let choosenId = this.choosenId;
       if(!this.index[choosenId]){
         this.index[choosenId] = 0;
       }
@@ -361,6 +374,7 @@ export default {
     },
 
     onPlay(index) {
+      // let choosenId = store.sate.choosenId;
       let choosenId = this.choosenId;
       let ITEM = this.Messages[choosenId][index]
       index = this.chatList[choosenId].indexOf(ITEM);
@@ -381,6 +395,7 @@ export default {
     },
 
     bindAudioEvent(index) {
+      // let choosenId = store.sate.choosenId;
       let choosenId = this.choosenId;
       let chunkList = this.chatList[choosenId];
       if (!chunkList) {

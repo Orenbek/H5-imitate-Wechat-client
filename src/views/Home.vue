@@ -61,6 +61,9 @@ export default {
       this.ToF = tof;
       this.getUserList();
     },
+    // choose(val){
+    //   this.choosenId = val;
+    // },
     getUserList() {
       let that = this;
       let param = store.state.USERLIST;
