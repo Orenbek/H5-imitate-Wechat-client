@@ -58,9 +58,6 @@
 <script>
 import store from "@/store";
 import { onPost } from "@/services/api";
-import { connect, AsyncClient } from "@/services/mqtt-wrapper/index.js";
-import { debuglog } from 'util';
-const mqtt = require("mqtt");
 
 export default {
   data() {
@@ -165,6 +162,7 @@ export default {
               store.commit("initParam", param);
               store.commit('set',{key:'userid', val:param.userid});
               store.commit('set',{key:'username', val:param.username});
+              store.commit('set',{key:'choosenId', val:param.userid});
             }
           })
           .catch(err => {
@@ -177,59 +175,6 @@ export default {
         return false;
       }
       return true;
-    },
-    mqttClient() {
-      // let INFO = {
-      //   method: "INFO",
-      //   userid: "636861",
-      //   session: "BSf9IKuBzz",
-      //   version: "1.0"
-      // };
-      // let res = onPost(INFO)
-      // res.then(res=>{
-      //     let data = res.data;
-      // }).catch(err=>{
-      //     console.log(err);
-      // })
-
-      let serv = store.state.mqttServ;
-      let options = {
-        port: 9000,
-        // host: "mqtt://127.0.0.1",
-        keepalive: 60,
-        reconnectPeriod: 1000,
-        // protocolId: "MQIsdp",
-        // protocolVersion: 3,
-        clean: true,
-        encoding: "utf8"
-      };
-      let port;
-      var client = mqtt.connect("mqtt://127.0.0.1", { port: 1883 });
-      client.on("connect", data => {
-        console.log("connect!");
-      });
-      // client.on("error", (err)=>{
-      //   console.log('connect!'+err)
-      // });
-
-      client.on("message", function(topic, message) {
-        // message is Buffer
-        console.log(message.toString());
-        client.end();
-      });
-      // var client = mqtt.createClient(9000, '127.0.0.1');
-      // const asyncClient = new AsyncClient(client);
-      // let payload;
-      // asyncClient
-      //   .publish("webonline", (payload = "baz"), (qos = 0))
-      //   .then(() => {
-      //     console.log("We async now");
-      //     return asyncClient.end();
-      //   })
-      //   .catch(err => {
-      //     console.log(err);
-      //     debugger;
-      //   });
     },
     
   }

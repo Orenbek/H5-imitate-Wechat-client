@@ -3,14 +3,28 @@
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
         
-        <li v-for="(item1, index1) in videoList" :key="index1" class="msg">
+        <!-- <li v-for="(item1, index1) in videoList" :key="index1" class="msg">
           <img class="avatar" :src="myAvatar"/>
           <div class="video" @click="onVideoPlay(index1)" @touchend.prevent="onVideoPlay(index1)">
             <img alt="截图" :src="item1.poster">
           </div>
-        </li>
+        </li> -->
 
         <template v-for="(item, index) in this.Messages[this.choosenId]">
+          <!-- 视频消息 -->
+          <li v-if="item.type==='video'&&item.userid===userid" :key="index" class="msg">
+          <img class="avatar" :src="myAvatar"/>
+          <div class="video" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
+            <img alt="截图" :src="item.poster">
+          </div>
+        </li>
+        <li v-if="item.type==='video'&&item.userid!==userid" :key="index" class="msg">
+          <img class="avatar1" src="https://denzel.netlify.com/hero.png"/>
+          <div class="video" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
+            <img alt="截图" :src="item.poster">
+          </div>
+        </li>
+        <!-- 音频消息 -->
         <li v-if="item.type==='audio'&&item.userid===userid" :key="index"
           class="msg" @click="onAudioPlay(index)" @touchend.prevent="onAudioPlay(index)">
           <img class="avatar" :src="myAvatar" />
@@ -31,6 +45,7 @@
           </div>
           <div class="duration1">{{item.duration}}"</div>
         </li>
+        <!-- 文本消息 -->
         <li v-if="item.type==='text'&&item.userid===userid" :key="index" class="textlist te1">
            <img class="avatar av1" :src="myAvatar"/>
           <div class="textmes tm1">
@@ -243,7 +258,7 @@ export default {
       if(!this.index[choosenId]){
         this.index[choosenId] = 0;
       }
-      this.index[choosenId] += 1;
+      
       m.index = this.index[choosenId];
       let arr = this.noteList[choosenId];
       if(arr===undefined){
@@ -260,6 +275,8 @@ export default {
       M.push(...arr)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
+
+      this.index[choosenId] += 1;
     },
     wsSendAudio(blob, audioStream, duration) {
       let choosenId = this.choosenId;
@@ -271,11 +288,11 @@ export default {
       };
       this.bufferParam = m;
       this.wsSend('',blob);
+      this.audioChunks = [];
 
       if(!this.index[choosenId]){
         this.index[choosenId] = 0;
       }
-      this.index[choosenId]+=1;
       
       let cList = this.audioList[choosenId];
       if (!cList) {
@@ -286,7 +303,7 @@ export default {
       type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
       this.audioList[choosenId] = cList;
       // this.$set(this.audioList,choosenId,cList);
-      this.audioChunks = [];
+      
       //收到的消息，应该push进发来消息对应的userid下面
       let M = this.Messages[choosenId];
       if(M===undefined){
@@ -296,11 +313,10 @@ export default {
       M.push(...cList)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
+
+      this.index[choosenId]+=1;
     },
     wsSendVideo(blob, videoStream, duration){
-      this.videoList.push({videoStream: videoStream});      
-      this.videoChunks = [];
-
       let choosenId = this.choosenId;
       let m = {
         duration: duration,
@@ -310,38 +326,41 @@ export default {
       };
       this.bufferParam = m;
       this.wsSend('',blob);
+      this.videoChunks = [];
 
       if(!this.index[choosenId]){
         this.index[choosenId] = 0;
       }
-      this.index[choosenId]+=1;
       
       let vList = this.videoList[choosenId];
       if (!vList) {
-        this.audioList[choosenId] = [];
+        this.videoList[choosenId] = [];
         vList = [];
       }
-      vList.push({ duration: duration, audioStream: audioStream, 
-      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
-      this.audioList[choosenId] = vList;
-      // this.$set(this.audioList,choosenId,vList);
-      this.audioChunks = [];
+      vList.push({ duration: duration, videoStream: videoStream, 
+      type: 'video', userid: store.state.userid, index: this.index[choosenId] });
+      this.videoList[choosenId] = vList;
+      // this.$set(this.videoList,choosenId,vList);
+
       //收到的消息，应该push进发来消息对应的userid下面
       let M = this.Messages[choosenId];
       if(M===undefined){
         M = [];
       }
-      
-      M.push(...cList)
+      M.push(...vList)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
+      this.onCapture(choosenId,this.index[choosenId]);
+      //生成截图
+
+      this.index[choosenId]+=1;
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
       if(!this.index[val.userid]){
         this.index[val.userid] = 0;
       }
-      this.index[val.userid] += 1;
+
       val.index = this.index[val.userid];
       let arr = this.noteList[val.userid];
       if(arr===undefined){
@@ -359,15 +378,16 @@ export default {
       M.push(...arr)
       M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
+
+      this.index[val.userid] += 1;
     },
     wsReceiveAudio(val) {
-      console.log(val);
       let audioStream = URL.createObjectURL(this.bufferBlob);
       val.audioStream = audioStream;
       if(!this.index[val.userid]){
         this.index[val.userid] = 0;
       }
-      this.index[val.userid] += 1;
+
       val.index = this.index[val.userid];
       let arr = this.audioList[val.userid];
       if(arr===undefined){
@@ -385,9 +405,36 @@ export default {
       M.push(...arr)
       M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
+
+      this.index[val.userid] += 1;
     },
     wsReceiveVideo(val) {
       console.log(val);
+      let videoStream = URL.createObjectURL(this.bufferBlob);
+      val.videoStream = videoStream;
+      if(!this.index[val.userid]){
+        this.index[val.userid] = 0;
+      }
+
+      val.index = this.index[val.userid];
+      let arr = this.videoList[val.userid];
+      if(arr===undefined){
+        arr = [];
+      }
+      arr.push(val);
+      this.videoList[val.userid] = arr;
+      // this.$set(this.videoList,val.userid,arr);
+
+      let M = this.Messages[val.userid];
+      if(M===undefined){
+        M = [];
+      }
+      M.push(...arr)
+      M = Array.from(new Set(M))
+      this.$set(this.Messages,val.userid,M);
+      this.onCapture(val.userid,this.index[val.userid]);
+      //生成截图
+      this.index[val.userid] += 1;
     },
     SendItBack(res){
       console.log(res);
@@ -498,7 +545,15 @@ export default {
 
     onVideoPlay (index) {
       this.showVideo(true);
-      let item = this.videoList[index];
+      let choosenId = this.choosenId;
+      let ITEM = this.Messages[choosenId][index]
+      index = this.videoList[choosenId].indexOf(ITEM);
+      let vList = this.videoList[choosenId];
+      if (!vList) {
+        this.videoList[choosenId] = [];
+        vList = [];
+      }
+      let item = vList[index];
       this.video.src = item.videoStream;
       this.video.muted = false;
       this.video.play();
@@ -568,7 +623,7 @@ export default {
       let blob = new Blob(this.videoChunks, { 'type' : 'video/webm' }),
         videoStream = URL.createObjectURL(blob),
         duration = Math.round(blob.size/80000);
-      
+
       if (duration <= 0) {
         //隐藏video
         this.showVideo(false);
@@ -581,12 +636,11 @@ export default {
         duration = 60;
       }
       this.wsSendVideo(blob,videoStream,duration);
-      this.onCapture(this.videoIndex);
     },
 
     //获取视频截图
-    onCapture (index) {
-      let item = this.videoList[index];
+    onCapture (userid,index) {
+      let item = this.Messages[userid][index];
     
       this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
@@ -594,8 +648,6 @@ export default {
       let src = URL.createObjectURL(blob);
       this.$set(item, 'poster', src);
       });
-      //索引后移
-      this.videoIndex ++;
 
       //隐藏video
       this.showVideo(false);
@@ -697,7 +749,7 @@ export default {
 .msg-list .msg .duration {
   float: right;
 }
-.msg-list .msg .avatar1,
+.avatar1,
 .msg-list .msg .audio.left,
 .msg-list .msg .duration1 {
   float: left;
@@ -710,7 +762,7 @@ export default {
   background-color: #000;
   background-size: 100%;
 }
-.msg-list .msg .avatar1 {
+.avatar1 {
   width: 24px;
   height: 24px;
   line-height: 24px;
