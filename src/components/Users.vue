@@ -22,11 +22,20 @@
     <div class="user-list">
       <div v-show="radioOrChat==='radio'">
       <div class="user" v-for="(item1,index1) in $store.state.userList" v-bind:key="index1" @click="choose(index1)">
-        <div class="avatar">
+        <template v-if="item1===$store.state.userid">
+          <div class="avatar">
+          <img src="@/img/myuser.png" />
+        </div>
+        <span class="name">我--ID {{item1}} </span>
+        <span class="detail">聊天内容</span>
+        </template>
+        <template v-else>
+          <div class="avatar">
           <img src="@/img/myuser.png" />
         </div>
         <span class="name">ID为 {{item1}} 的用户</span>
         <span class="detail">聊天内容</span>
+        </template>
       </div>
       </div>
        <div v-show="radioOrChat==='chat'">

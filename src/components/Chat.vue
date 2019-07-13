@@ -138,7 +138,7 @@ export default {
       this.notedata = "";
     },
     onInitWs() {
-      ws = new WebSocket("ws://localhost:8000");
+      ws = new WebSocket("ws://10.28.207.54:8000");
       ws.addEventListener("open", this.wsOpen);
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
@@ -161,7 +161,7 @@ export default {
       this.wsSend(initParam);
       setInterval(()=>{
         this.wsSend(initParam);
-      },20000);
+      },5000);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
