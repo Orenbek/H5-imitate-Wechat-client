@@ -2,11 +2,19 @@
   <div class="container">
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
+        
+        <li v-for="(item1, index1) in videoList" :key="index1" class="msg">
+          <img class="avatar" :src="myAvatar"/>
+          <div class="video" @click="onVideoPlay(index1)" @touchend.prevent="onVideoPlay(index1)">
+            <img alt="截图" :src="item1.poster">
+          </div>
+        </li>
+
         <template v-for="(item, index) in this.Messages[this.choosenId]">
         <li v-if="item.type==='audio'&&item.userid===userid" :key="index"
-          class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
+          class="msg" @click="onAudioPlay(index)" @touchend.prevent="onAudioPlay(index)">
           <img class="avatar" :src="myAvatar" />
-          <div v-cloak class="audio" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
+          <div v-cloak class="audio right" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
             <span>(</span>
             <span>(</span>
             <span>(</span>
@@ -14,9 +22,9 @@
           <div class="duration">{{item.duration}}"</div>
         </li>
         <li v-if="item.type==='audio'&&item.userid!==userid" :key="index"
-          class="msg" @click="onPlay(index)" @touchend.prevent="onPlay(index)">
-          <div class="avatar1"></div>
-          <div v-cloak class="audio1" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
+          class="msg" @click="onAudioPlay(index)" @touchend.prevent="onAudioPlay(index)">
+          <img class="avatar1" src="https://denzel.netlify.com/hero.png"/>
+          <div v-cloak class="audio left" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
             <span>)</span>
             <span>)</span>
             <span>)</span>
@@ -41,14 +49,16 @@
         </li>
         </template>
       </transition-group>
-      <audio ref="audio"></audio>
+          <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
+          <canvas ref="canvas"></canvas>
+          <audio ref="audio"></audio>
     </div>
     <div class="buttom">
       <div class="bq">
-        <div class="phone-operate" @mousedown="onMousedown" @touchstart.prevent="onMousedown"
-          @mouseup="onMouseup" @touchend.prevent="onMouseup">{{btnText}}</div>
-        <div class="phone-operate" @mousedown="onMousedown" @touchstart.prevent="onMousedown"
-          @mouseup="onMouseup" @touchend.prevent="onMouseup">摄像头</div>
+        <div class="phone-operate" @mousedown="onAudioMousedown" @touchstart.prevent="onAudioMousedown"
+          @mouseup="onAudioMouseup" @touchend.prevent="onAudioMouseup">{{btnAudio}}</div>
+        <div class="phone-operate" @mousedown="onVideoMousedown" @touchstart.prevent="onVideoMousedown" 
+          @mouseup="onVideoMouseup" @touchend.prevent="onVideoMouseup">{{btnVideo}}</div>
         <div class="controller">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
@@ -69,10 +79,6 @@ export default {
   props: {},
   components: {},
   data() {
-    // Trans.$on('choose',(data)=>{
-    //     this.choosenId = data;
-    //   })
-    // let choosenId = store.state.choosenId;
     let myAvatar = store.state.myAvatar;
     let userid = store.state.userid;
     let bufferBlob;
@@ -80,9 +86,12 @@ export default {
       myAvatar,
       notedata: "",
       userid,
-      chunks: [],
-      btnText: "按住说话",
-      chatList: [],
+      audioChunks: [],
+      videoChunks: [],
+      btnAudio: "按住说话",
+      btnVideo: "按住拍视频",
+      audioList: [],
+      videoList: [],
       //包含整个语音消息，包含我的和对方的
       noteList: [],
       //包含整个文字信息，包含我的和对方的
@@ -97,7 +106,8 @@ export default {
       choosenId: '',
       index:[],
       bufferParam: {},
-      bufferBlob
+      bufferBlob,
+      videoIndex: 0
     };
   },
   created(){
@@ -106,11 +116,11 @@ export default {
       })
   },
   computed: {
-    choosenId() {
-      Trans.$on('choose',(data)=>{
-        this.choosenId = data;
-      })
-    },
+    // choosenId() {
+    //   Trans.$on('choose',(data)=>{
+    //     this.choosenId = data;
+    //   })
+    // },
     getAvatar() {
       // this.myAvatar = this.$store.state.myAvatar;
     },
@@ -130,7 +140,11 @@ export default {
       return;
     }
     this.audio = this.$refs.audio;
+    this.video = this.$refs.video;
+    this.canvas = this.$refs.canvas;
+    this.ctx = this.canvas.getContext('2d');
     this.requestAudioAccess();
+    this.requestVideoAccess();
     this.onInitWs();
   },
   methods: {
@@ -159,9 +173,9 @@ export default {
         type: "init"
       }
       this.wsSend(initParam);
-      setInterval(()=>{
-        this.wsSend(initParam);
-      },5000);
+      // setInterval(()=>{
+      //   this.wsSend(initParam);
+      // },30000);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -213,9 +227,10 @@ export default {
         alert("已经断开socket连接，请重新连接websocket服务器");
       }
     },
+
+    //send方法中的逻辑都是相近的，都是发送的同时把数据存到本地
     wsSendText() {
       let choosenId = this.choosenId;
-      // let choosenId = store.sate.choosenId;
       let m = {
         mes: this.notedata,
         userid: store.state.userid,
@@ -235,7 +250,8 @@ export default {
         arr = [];
       }
       arr.push(m);
-      this.$set(this.noteList,choosenId,arr);
+      this.noteList[choosenId] = arr;
+      // this.$set(this.noteList,choosenId,arr);
       let M = this.Messages[choosenId];
       if(M===undefined){
         M = [];
@@ -246,7 +262,6 @@ export default {
       this.$set(this.Messages,choosenId,M);
     },
     wsSendAudio(blob, audioStream, duration) {
-      // let choosenId = store.sate.choosenId;
       let choosenId = this.choosenId;
       let m = {
         duration: duration,
@@ -262,22 +277,62 @@ export default {
       }
       this.index[choosenId]+=1;
       
-      let chunkList = this.chatList[choosenId];
-      if (!chunkList) {
-        this.chatList[choosenId] = [];
-        chunkList = [];
+      let cList = this.audioList[choosenId];
+      if (!cList) {
+        this.audioList[choosenId] = [];
+        cList = [];
       }
-      chunkList.push({ duration: duration, stream: audioStream, 
+      cList.push({ duration: duration, audioStream: audioStream, 
       type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
-      this.$set(this.chatList,choosenId,chunkList);
-      this.chunks = [];
+      this.audioList[choosenId] = cList;
+      // this.$set(this.audioList,choosenId,cList);
+      this.audioChunks = [];
       //收到的消息，应该push进发来消息对应的userid下面
       let M = this.Messages[choosenId];
       if(M===undefined){
         M = [];
       }
       
-      M.push(...chunkList)
+      M.push(...cList)
+      M = Array.from(new Set(M))
+      this.$set(this.Messages,choosenId,M);
+    },
+    wsSendVideo(blob, videoStream, duration){
+      this.videoList.push({videoStream: videoStream});      
+      this.videoChunks = [];
+
+      let choosenId = this.choosenId;
+      let m = {
+        duration: duration,
+        userid: store.state.userid,
+        objectid: [choosenId],
+        type: "video"
+      };
+      this.bufferParam = m;
+      this.wsSend('',blob);
+
+      if(!this.index[choosenId]){
+        this.index[choosenId] = 0;
+      }
+      this.index[choosenId]+=1;
+      
+      let vList = this.videoList[choosenId];
+      if (!vList) {
+        this.audioList[choosenId] = [];
+        vList = [];
+      }
+      vList.push({ duration: duration, audioStream: audioStream, 
+      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
+      this.audioList[choosenId] = vList;
+      // this.$set(this.audioList,choosenId,vList);
+      this.audioChunks = [];
+      //收到的消息，应该push进发来消息对应的userid下面
+      let M = this.Messages[choosenId];
+      if(M===undefined){
+        M = [];
+      }
+      
+      M.push(...cList)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
     },
@@ -293,7 +348,8 @@ export default {
         arr = [];
       }
       arr.push(val);
-      this.$set(this.noteList,val.userid,arr);
+      this.noteList[val.userid] = arr;
+      // this.$set(this.noteList,val.userid,arr);
 
       let M = this.Messages[val.userid];
       if(M===undefined){
@@ -304,22 +360,22 @@ export default {
       M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
     },
-
     wsReceiveAudio(val) {
       console.log(val);
       let audioStream = URL.createObjectURL(this.bufferBlob);
-      val.stream = audioStream;
+      val.audioStream = audioStream;
       if(!this.index[val.userid]){
         this.index[val.userid] = 0;
       }
       this.index[val.userid] += 1;
       val.index = this.index[val.userid];
-      let arr = this.chatList[val.userid];
+      let arr = this.audioList[val.userid];
       if(arr===undefined){
         arr = [];
       }
       arr.push(val);
-      this.$set(this.chatList,val.userid,arr);
+      this.audioList[val.userid] = arr;
+      // this.$set(this.audioList,val.userid,arr);
 
       let M = this.Messages[val.userid];
       if(M===undefined){
@@ -344,10 +400,11 @@ export default {
     },
 
     requestAudioAccess() {
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(
-        stream => {
-          this.recorder = new window.MediaRecorder(stream);
-          this.bindEvents();
+      navigator.mediaDevices.getUserMedia({audio: true}).then(
+        audioStream => {
+          this.audioRecorder = new window.MediaRecorder(audioStream);
+          this.audioStream = audioStream;
+          this.bindAudioEvents();
         },
         error => {
           alert("出错，请确保已允许浏览器获取录音权限");
@@ -355,54 +412,108 @@ export default {
       );
     },
 
-    onMousedown() {
-      this.onStart();
-      this.btnText = "松开结束";
+    requestVideoAccess(){
+      navigator.mediaDevices.getUserMedia({audio: true,video: true}).then(
+      videoStream => {
+        this.videoRecorder = new window.MediaRecorder(videoStream);
+        this.videoStream = videoStream;
+        this.bindVideoEvents();
+      }, error => {
+          alert('出错，请确保已允许浏览器获取音视频权限');
+      });
     },
 
-    onMouseup() {
-      this.onStop();
-      this.btnText = "按住说话";
+    onAudioMousedown() {
+      this.onAudioStart();
+      this.btnAudio = "松开结束";
     },
 
-    onStart() {
-      this.recorder.start();
+    onAudioMouseup() {
+      this.onAudioStop();
+      this.btnAudio = "按住说话";
     },
 
-    onStop() {
-      this.recorder.stop();
+    onVideoMousedown () {
+      this.showVideo(true);
+      this.onPreview();
+      this.btnVideo = '松开结束';
+      this.onVideoStart(); 
     },
 
-    onPlay(index) {
-      // let choosenId = store.sate.choosenId;
+    onVideoMouseup () {
+      this.onVideoStop();
+      this.btnVideo = '按住拍视频';
+    },
+
+    onPreview () {
+      this.video.srcObject = this.videoStream;
+      this.video.muted = true;
+      this.video.play();
+    },
+
+    showVideo (bShow) {
+      if(bShow) {
+        this.video.style.display = 'block';
+      } else {
+        this.video.style.display = 'none';
+				this.video.pause();
+      }
+    },
+
+    onAudioStart() {
+      this.audioRecorder.start();
+    },
+
+    onAudioStop() {
+      this.audioRecorder.stop();
+    },
+
+    onVideoStart () {
+      this.videoRecorder.start();
+    },
+
+    onVideoStop () {
+      this.videoRecorder.stop();
+    },
+
+    onAudioPlay(index) {
       let choosenId = this.choosenId;
       let ITEM = this.Messages[choosenId][index]
-      index = this.chatList[choosenId].indexOf(ITEM);
-      let chunkList = this.chatList[choosenId];
-      if (!chunkList) {
-        this.chatList[choosenId] = [];
-        chunkList = [];
+      index = this.audioList[choosenId].indexOf(ITEM);
+      let cList = this.audioList[choosenId];
+      if (!cList) {
+        this.audioList[choosenId] = [];
+        cList = [];
       }
-      chunkList.forEach(item => {
+      cList.forEach(item => {
         this.$set(item, "wink", false);
       });
 
-      let item = chunkList[index];
-      this.audio.src = item.stream;
+      let item = cList[index];
+      this.audio.src = item.audioStream;
       this.audio.play();
 
-      this.bindAudioEvent(index);
+      this.AudioEvent(index);
     },
 
-    bindAudioEvent(index) {
-      // let choosenId = store.sate.choosenId;
+    onVideoPlay (index) {
+      this.showVideo(true);
+      let item = this.videoList[index];
+      this.video.src = item.videoStream;
+      this.video.muted = false;
+      this.video.play();
+
+      this.VideoEvent();
+    },
+
+    AudioEvent(index) {
       let choosenId = this.choosenId;
-      let chunkList = this.chatList[choosenId];
-      if (!chunkList) {
-        this.chatList[choosenId] = [];
-        chunkList = [];
+      let cList = this.audioList[choosenId];
+      if (!cList) {
+        this.audioList[choosenId] = [];
+        cList = [];
       }
-      let item = chunkList[index];
+      let item = cList[index];
 
       this.audio.onplaying = () => {
         this.$set(item, "wink", true);
@@ -413,20 +524,35 @@ export default {
       };
     },
 
-    bindEvents() {
-      this.recorder.ondataavailable = this.getRecordingData;
-      this.recorder.onstop = this.saveRecordingData;
+    VideoEvent () {
+      this.video.onended = () => {
+      this.showVideo(false);
+      }
     },
 
-    getRecordingData(e) {
-      this.chunks.push(e.data);
+    bindAudioEvents() {
+      this.audioRecorder.ondataavailable = this.getAudioRecordingData;
+      this.audioRecorder.onstop = this.saveAudioRecordingData;
     },
 
-    saveRecordingData() {
-      let blob = new Blob(this.chunks, { type: "audio/ogg; codecs=opus" }),
+    bindVideoEvents () {
+      this.videoRecorder.ondataavailable = this.getVideoRecordingData;
+      this.videoRecorder.onstop = this.saveVideoRecordingData;
+    },
+
+    getAudioRecordingData(e) {
+      this.audioChunks.push(e.data);
+    },
+
+    getVideoRecordingData (e) {
+      this.videoChunks.push(e.data);
+    },
+
+    saveAudioRecordingData() {
+      let blob = new Blob(this.audioChunks, { type: "audio/ogg; codecs=opus" }),
         audioStream = URL.createObjectURL(blob),
         //估算时长
-        duration = parseInt(blob.size / 6600);
+        duration = Math.round(blob.size / 6000);
 
       if (duration <= 0) {
         alert("说话时间太短");
@@ -436,6 +562,44 @@ export default {
         duration = 60;
       }
       this.wsSendAudio(blob, audioStream,duration);
+    },
+
+    saveVideoRecordingData() {
+      let blob = new Blob(this.videoChunks, { 'type' : 'video/webm' }),
+        videoStream = URL.createObjectURL(blob),
+        duration = Math.round(blob.size/80000);
+      
+      if (duration <= 0) {
+        //隐藏video
+        this.showVideo(false);
+        this.video.srcObject = null;
+        this.videoChunks = [];
+        alert("说话时间太短");
+        return;
+      }
+      if (duration > 60) {
+        duration = 60;
+      }
+      this.wsSendVideo(blob,videoStream,duration);
+      this.onCapture(this.videoIndex);
+    },
+
+    //获取视频截图
+    onCapture (index) {
+      let item = this.videoList[index];
+    
+      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+
+      this.canvas.toBlob((blob) => {
+      let src = URL.createObjectURL(blob);
+      this.$set(item, 'poster', src);
+      });
+      //索引后移
+      this.videoIndex ++;
+
+      //隐藏video
+      this.showVideo(false);
+      this.video.srcObject = null;
     }
   }
 };
@@ -528,23 +692,22 @@ export default {
   overflow: hidden;
   cursor: pointer;
 }
-.msg-list .msg .avatar,
+.avatar,
 .msg-list .msg .audio,
 .msg-list .msg .duration {
   float: right;
 }
 .msg-list .msg .avatar1,
-.msg-list .msg .audio1,
+.msg-list .msg .audio.left,
 .msg-list .msg .duration1 {
   float: left;
 }
-.msg-list .msg .avatar {
+.avatar {
   width: 24px;
   height: 24px;
   line-height: 24px;
   text-align: center;
   background-color: #000;
-  /* background: url('https://denzel.netlify.com/hero.png') 0 0; */
   background-size: 100%;
 }
 .msg-list .msg .avatar1 {
@@ -553,7 +716,6 @@ export default {
   line-height: 24px;
   text-align: center;
   background-color: #000;
-  background: url("https://denzel.netlify.com/hero.png") 0 0;
   background-size: 100%;
 }
 .msg-list .msg .audio {
@@ -569,28 +731,24 @@ export default {
   text-align: right;
   background-color: rgba(107, 197, 107, 0.85);
 }
-.msg-list .msg .audio1 {
-  position: relative;
+.msg-list .msg .audio.right{
+  margin-right: 6px;
+  text-align: right;
+  background-color: rgba(107, 197, 107, 0.85);
+}
+.msg-list .msg .audio.left {
   margin-left: 6px;
-  max-width: 116px;
-  min-width: 30px;
-  height: 24px;
-  line-height: 24px;
-  padding: 0 4px 0 10px;
-  border-radius: 2px;
-  color: #000;
   text-align: left;
   background-color: rgba(194, 194, 194, 0.678);
 }
 .msg-list .msg.eg {
   cursor: default;
 }
-.msg-list .msg.eg .audio {
+.msg-list .msg.eg .audio.right {
   text-align: left;
 }
 .msg-list .msg .audio:before {
   position: absolute;
-  right: -8px;
   top: 8px;
   content: "";
   display: inline-block;
@@ -598,60 +756,55 @@ export default {
   height: 0;
   border-style: solid;
   border-width: 4px;
+}
+.msg-list .msg .audio.right:before {
+  right: -8px;
   border-color: transparent transparent transparent rgba(107, 197, 107, 0.85);
 }
-.msg-list .msg .audio span {
+.msg-list .msg .audio.right span {
   color: rgba(255, 255, 255, 0.8);
   display: inline-block;
   transform-origin: center;
 }
-.msg-list .msg .audio span:nth-child(1) {
+.msg-list .msg .audio.right span:nth-child(1) {
   font-weight: 400;
 }
-.msg-list .msg .audio span:nth-child(2) {
+.msg-list .msg .audio.right span:nth-child(2) {
   transform: scale(0.8);
   font-weight: 500;
 }
-.msg-list .msg .audio span:nth-child(3) {
+.msg-list .msg .audio.right span:nth-child(3) {
   transform: scale(0.5);
   font-weight: 700;
 }
-.msg-list .msg .audio.wink span {
+.msg-list .msg .audio.right.wink span {
   animation: wink 1s ease infinite;
 }
 
-.msg-list .msg.eg .audio1 {
+.msg-list .msg.eg .audio.left {
   text-align: left;
 }
-.msg-list .msg .audio1:before {
-  position: absolute;
+.msg-list .msg .audio.left:before {
   left: -8px;
-  top: 8px;
-  content: "";
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 4px;
   border-color: transparent rgba(194, 194, 194, 0.678) transparent transparent;
 }
-.msg-list .msg .audio1 span {
+.msg-list .msg .audio.left span {
   color: rgba(255, 255, 255, 0.8);
   display: inline-block;
   transform-origin: center;
 }
-.msg-list .msg .audio1 span:nth-child(3) {
+.msg-list .msg .audio.left span:nth-child(3) {
   font-weight: 400;
 }
-.msg-list .msg .audio1 span:nth-child(2) {
+.msg-list .msg .audio.left span:nth-child(2) {
   transform: scale(0.8);
   font-weight: 500;
 }
-.msg-list .msg .audio1 span:nth-child(1) {
+.msg-list .msg .audio.left span:nth-child(1) {
   transform: scale(0.5);
   font-weight: 700;
 }
-.msg-list .msg .audio1.wink span {
+.msg-list .msg .audio.left.wink span {
   animation: wink 1s ease infinite;
 }
 
@@ -708,9 +861,8 @@ export default {
   text-align: left;
   background-color: rgba(194, 194, 194, 0.678);
 }
-.textmes.tm1:before{
-   position: absolute;
-  right: -8px;
+.textmes::before{
+  position: absolute;
   top: 8px;
   content: "";
   display: inline-block;
@@ -718,18 +870,13 @@ export default {
   height: 0;
   border-style: solid;
   border-width: 4px;
+}
+.textmes.tm1::before{
+  right: -8px;
   border-color: transparent transparent transparent rgba(107, 197, 107, 0.85);
 }
 .textmes.tm2:before{
-   position: absolute;
   left: -8px;
-  top: 8px;
-  content: "";
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 4px;
   border-color: transparent rgba(194, 194, 194, 0.678) transparent transparent;
 }
 .textcontent{
@@ -767,12 +914,33 @@ export default {
 .textlist .av2{
   background: url('https://denzel.netlify.com/hero.png') 0 0;
 }
-.textlist .avatar{
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
-  text-align: center;
-  background-color: #000;
-  background-size: 100%;
+
+video {
+	position: absolute;
+  width: 400px;
+  left: calc(50% - 200px);
+	top: 20px;
+	display: none;
+}
+canvas {
+	display: none;
+}
+.msg-list .msg .video {
+	position: relative;
+  float: right;
+	width: 100px;
+	height: 75px;
+	margin-right: 6px;
+	border-radius: 4px;
+	overflow: hidden;
+	color: rgba(255, 255, 255, .8);
+	text-align: center;
+	font-size: 0;
+	cursor: pointer;
+}
+.msg-list .msg .video img {
+	width: 100%;
+	height: 100%;
+	background-color: #636e72;
 }
 </style>
