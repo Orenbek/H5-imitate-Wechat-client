@@ -14,13 +14,13 @@
           <!-- 视频消息 -->
           <li v-if="item.type==='video'&&item.userid===userid" :key="index" class="msg">
           <img class="avatar" :src="myAvatar"/>
-          <div class="video" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
+          <div class="video right" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
             <img alt="截图" :src="item.poster">
           </div>
         </li>
         <li v-if="item.type==='video'&&item.userid!==userid" :key="index" class="msg">
           <img class="avatar1" src="https://denzel.netlify.com/hero.png"/>
-          <div class="video" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
+          <div class="video left" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
             <img alt="截图" :src="item.poster">
           </div>
         </li>
@@ -122,28 +122,23 @@ export default {
       index:[],
       bufferParam: {},
       bufferBlob,
-      videoIndex: 0
+      buffImgArr: []
     };
   },
   created(){
     Trans.$on('choose',(data)=>{
         this.choosenId = data;
       })
+    // this.onCapture(val.userid,this.index[val.userid]);
+  },
+  watch: {
+    choosenId(){
+      if(this.buffImgArr[this.choosenId]!==[]&&this.buffImgArr[this.choosenId]!==undefined){
+        this.onCapture(this.choosenId,this.index[this.choosenId]);
+      }
+    }
   },
   computed: {
-    // choosenId() {
-    //   Trans.$on('choose',(data)=>{
-    //     this.choosenId = data;
-    //   })
-    // },
-    getAvatar() {
-      // this.myAvatar = this.$store.state.myAvatar;
-    },
-    getUserid(){
-      // this.userid = this.$store.state.userid;
-    },
-    combine(){
-    }
   },
   mounted: function() {
     if (!navigator.mediaDevices) {
@@ -350,8 +345,12 @@ export default {
       M.push(...vList)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
-      this.onCapture(choosenId,this.index[choosenId]);
+      this.buffImgArr[choosenId].push(index[choosenId]);
+      this.onCapture(choosenId);
       //生成截图
+      //隐藏video
+      this.showVideo(false);
+      this.video.srcObject = null;
 
       this.index[choosenId]+=1;
     },
@@ -432,8 +431,13 @@ export default {
       M.push(...arr)
       M = Array.from(new Set(M))
       this.$set(this.Messages,val.userid,M);
-      this.onCapture(val.userid,this.index[val.userid]);
-      //生成截图
+      //生成截图不能在这里写。因为截图是通过canvas生成的，得先canvas渲染。
+      //在choosenID变化的时候再渲染当前的截图
+      this.buffImgArr[val.userid].push(this.index[val.userid]);
+      if(val.userid===this.choosenId){
+        this.onCapture(val.userid);
+      } 
+
       this.index[val.userid] += 1;
     },
     SendItBack(res){
@@ -639,19 +643,21 @@ export default {
     },
 
     //获取视频截图
-    onCapture (userid,index) {
-      let item = this.Messages[userid][index];
-    
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+    onCapture (userid) {
+      let i;
+      for(i in this.buffImgArr[userid]){
+        let item = this.Messages[userid][i];
+        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
-      this.canvas.toBlob((blob) => {
-      let src = URL.createObjectURL(blob);
-      this.$set(item, 'poster', src);
-      });
-
-      //隐藏video
-      this.showVideo(false);
-      this.video.srcObject = null;
+        this.canvas.toBlob((blob) => {
+          let src = URL.createObjectURL(blob);
+          this.$set(item, 'poster', src);
+        });
+      }
+      this.buffImgArr[userid] = [];
+      // //隐藏video
+      // this.showVideo(false);
+      // this.video.srcObject = null;
     }
   }
 };
@@ -979,16 +985,22 @@ canvas {
 }
 .msg-list .msg .video {
 	position: relative;
-  float: right;
 	width: 100px;
 	height: 75px;
-	margin-right: 6px;
 	border-radius: 4px;
 	overflow: hidden;
 	color: rgba(255, 255, 255, .8);
 	text-align: center;
 	font-size: 0;
 	cursor: pointer;
+}
+.msg-list .msg .video.right{
+  float: right;
+	margin-right: 6px;
+}
+.msg-list .msg .video.left{
+  float: left;
+	margin-left: 6px;
 }
 .msg-list .msg .video img {
 	width: 100%;
