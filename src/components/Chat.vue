@@ -65,6 +65,8 @@
         </template>
       </transition-group>
           <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
+          <video ref="facetime1" width="200" ></video>
+          <video ref="facetime2" width="200" ></video>
           <canvas ref="canvas"></canvas>
           <audio ref="audio"></audio>
     </div>
@@ -75,6 +77,8 @@
         <div class="phone-operate" @mousedown="onVideoMousedown" @touchstart.prevent="onVideoMousedown" 
           @mouseup="onVideoMouseup" @touchend.prevent="onVideoMouseup">{{btnVideo}}</div>
         <div class="controller">
+          <img @click="faseTimeOff" src="@/img/delete.png" alt="清除" />
+          <img @click="faceTimeOn" src="@/img/submit.png" alt="">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
         </div>
@@ -122,7 +126,8 @@ export default {
       index:[],
       bufferParam: {},
       bufferBlob,
-      buffImgArr: []
+      buffImgArr: [],
+      faceingObjId: '',
     };
   },
   created(){
@@ -133,7 +138,7 @@ export default {
   },
   watch: {
     choosenId(){
-      if(this.buffImgArr[this.choosenId]!==[]&&this.buffImgArr[this.choosenId]!==undefined){
+      if(this.buffImgArr[this.choosenId]&&this.buffImgArr[this.choosenId]!==undefined){
         this.onCapture(this.choosenId);
       } else{
         this.buffImgArr[this.choosenId] = [];
@@ -153,6 +158,8 @@ export default {
     }
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
+    this.myfacetime = this.$refs.facetime1;
+    this.objfacetime = this.$refs.facetime2;
     this.canvas = this.$refs.canvas;
     this.ctx = this.canvas.getContext('2d');
     this.requestAudioAccess();
@@ -197,11 +204,17 @@ export default {
         console.log("Received arraybuffer");
       }
       if(event.data instanceof Blob){
-        console.log('this is Blob!');
-        this.buffer(event);
+        if(this.faceingObjId===''){
+          this.buffer(event); 
+        } else{
+          //接受流媒体消息。
+        }
       } else{
           let result = JSON.parse(event.data);
         switch (result.type) {
+          case "faceTime":
+            this.wsFaceTimeRequest(result);
+            break;
           case "audio":
             this.wsReceiveAudio(result);
             break;
@@ -413,7 +426,6 @@ export default {
       this.index[val.userid] += 1;
     },
     wsReceiveVideo(val) {
-      console.log(val);
       let videoStream = URL.createObjectURL(this.bufferBlob);
       val.videoStream = videoStream;
       if(!this.index[val.userid]){
@@ -667,6 +679,133 @@ export default {
       // //隐藏video
       // this.showVideo(false);
       // this.video.srcObject = null;
+    },
+
+    requestFaceTimeAccess(){
+      navigator.mediaDevices.getUserMedia({audio: true,video: true}).then(
+      faceStream => {
+        this.faceTimeRecorder = new window.MediaRecorder(faceStream);
+        this.faceStream = faceStream;
+        this.bindFaceTimeEvents();
+      }, error => {
+          alert('出错，请确保已允许浏览器获取音视频权限');
+      });
+    },
+
+    bindFaceTimeEvents () {
+      this.faceTimeRecorder.ondataavailable = this.getFaceTimeBlob;
+    },
+
+    faceTimeOn(){
+      this.showMyFaceTime(true);
+      let m = {
+        userid: this.userid,
+        objectid: [choosenId],
+        type: "faceTime",
+        state: "launch",
+      };
+      this.wsSend(m);
+      this.faceingObjId = choosenId;
+    },
+
+    getFaceTimeBlob(e){
+      this.wsSend('',e.data);
+    },
+
+    showMyFaceTime(show) {
+      if(show){
+        this.myfacetime.style.display = 'block';
+        this.myfacetime.srcObject = this.faceStream;
+        this.myfacetime.muted = true;
+        this.myfacetime.play();
+      } else{
+        this.myfacetime.style.display = 'none';
+        this.video.srcObject = null;
+      }
+    },
+
+    showObjFaceTime(show){
+      if(show){
+        this.objfacetime.style.display = 'block';
+        this.objfacetime.src = this.objFaceStream;
+        this.objfacetime.muted = false;
+        this.objfacetime.play();
+      } else{
+        this.objfacetime.style.display = 'none';
+      }
+    },
+
+    wsFaceTimeRequest(res){
+      // 收到FaceTime邀请或者发出的邀请的相应。
+      if(res.state==='launch'){
+        //收到邀请 打开我的视角
+        this.faceingObjId = res.objectid[0];
+        if(this.faceingObjId===this.choosenId){
+          this.showMyFaceTime(true);
+        }
+        return;
+      }
+      if(res.state==='accept'){
+        //邀请被接受
+        this.showObjFaceTime(true);
+        return;
+      }
+      if(res.state==='break'){
+        //邀请被拒绝
+        this.faceingObjId = '';
+        this.showMyFaceTime(false);
+      }
+    },
+
+    faceTimeAccept(){
+      //给服务器发送接受FaceTime消息
+      let m = {
+        userid: this.userid,
+        objectid: [choosenId],
+        type: "faceTime",
+        state: "accept",
+      };
+      this.wsSend(m);
+      this.faceTimeStarted();
+    },
+
+    faceTimeReject(){
+      //给服务器发送拒绝FaceTime消息
+      let m = {
+        userid: this.userid,
+        objectid: [choosenId],
+        type: "faceTime",
+        state: "break",
+      };
+      this.wsSend(m);
+      this.faceingObjId = '';
+    },
+
+    faceTimeStarted(){
+      //开始视频聊天后 打开对方视角 
+      this.showObjFaceTime(true)
+      this.faceTimeRecorder.start();
+      var interval = setInterval(() => {
+        if(this.faceTimeRecorder.state==='recording'){
+        this.faceTimeRecorder.requestData();
+      } else{
+        clearInterval(interval);
+      }
+      }, 30);
+    },
+
+    receiveFaceStream(blob){
+      this.objFaceStream = URL.createObjectURL(blob);
+    },
+
+    cancle(){
+      this.showVideo(false);
+      this.onVideoStop();
+    },
+    
+    faseTimeOff(){
+      this.faceTimeRecorder.stop();
+      // 发送取消FaceTime消息
     }
   }
 };
