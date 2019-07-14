@@ -134,7 +134,9 @@ export default {
   watch: {
     choosenId(){
       if(this.buffImgArr[this.choosenId]!==[]&&this.buffImgArr[this.choosenId]!==undefined){
-        this.onCapture(this.choosenId,this.index[this.choosenId]);
+        this.onCapture(this.choosenId);
+      } else{
+        this.buffImgArr[this.choosenId] = [];
       }
     }
   },
@@ -345,7 +347,10 @@ export default {
       M.push(...vList)
       M = Array.from(new Set(M))
       this.$set(this.Messages,choosenId,M);
-      this.buffImgArr[choosenId].push(index[choosenId]);
+      
+      this.buffImgArr[choosenId] ? this.buffImgArr[choosenId] : [];
+      console.log('choosenId ',this.buffImgArr[choosenId]);
+      this.buffImgArr[choosenId].push(this.index[choosenId]);
       this.onCapture(choosenId);
       //生成截图
       //隐藏video
@@ -433,6 +438,7 @@ export default {
       this.$set(this.Messages,val.userid,M);
       //生成截图不能在这里写。因为截图是通过canvas生成的，得先canvas渲染。
       //在choosenID变化的时候再渲染当前的截图
+      this.buffImgArr[val.userid] ? this.buffImgArr[val.userid] : [];
       this.buffImgArr[val.userid].push(this.index[val.userid]);
       if(val.userid===this.choosenId){
         this.onCapture(val.userid);
@@ -645,8 +651,11 @@ export default {
     //获取视频截图
     onCapture (userid) {
       let i;
-      for(i in this.buffImgArr[userid]){
-        let item = this.Messages[userid][i];
+      let buffArr = this.buffImgArr[userid];
+      console.log('12',this.buffImgArr);
+      console.log('333',this.Messages[userid]);
+      for(i in buffArr){
+        let item = this.Messages[userid][buffArr[i]];
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
 
         this.canvas.toBlob((blob) => {
