@@ -10,7 +10,6 @@
       <Chat class="chat" v-show='radioOrChat==="radio"'/>
       <Radio v-show='radioOrChat==="chat"' class="radio" />
     </template>
-    <!-- <vi/> -->
   </div>
 </template>
 
@@ -21,7 +20,6 @@ import Login from "@/components/Login.vue";
 import Users from "@/components/Users.vue";
 import Toast from "@/components/Toast.vue";
 import Chat from "@/components/Chat.vue";
-import vi from "@/components/Video.vue";
 import { onPost } from "@/services/api";
 import store from "@/store";
 
@@ -38,7 +36,6 @@ export default {
     Users,
     Toast,
     Chat,
-    vi
   },
   data: function() {
     let userid = store.state.userid;

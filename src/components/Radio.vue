@@ -2,6 +2,7 @@
   <div class="container">
     <div class="bgimg"></div>
     <div class="radio-name">我的电台</div>
+    <!-- <div class="jsmpeg" data-url="out.ts"></div> -->
     <div class="post-img">
       <img class="album" src="@/img/post.jpg" />
       <img class="border" src="@/img/border.png" />
@@ -9,17 +10,20 @@
     <div class="song-name">歌曲名字</div>
     <div class="controller">
       <img src="@/img/previous.png" />
-      <img @click="mqtt" class="play" src="@/img/play.png" />
+      <img @click="onTap" class="play" src="@/img/play.png" />
       <img src="@/img/next.png" />
     </div>
   </div>
 </template>
 
 <script>
-var mqtt = require("mqtt");
+require('@/services/jsmpeg.min.js');
 export default {
   data() {
-    return { playOrPause: "@/img/play.png" };
+    const publicPath = process.env.BASE_URL;
+    const url = `${publicPath}/out.ts`;
+    const player = new JSMpeg.Player(url)
+    return { playOrPause: "@/img/play.png", torf: false, player,url };
   },
   computed: {
     // playOrPause: function(){
@@ -33,20 +37,20 @@ export default {
   },
   methods: {
     onTap() {
-      if (this.playOrPause === "@/img/play.png") {
-        this.playOrPause = "@/img/pause.png";
-      } else {
-        this.playOrPause = "@/img/play.png";
+      if(this.torf){
+        this.player.play();
+        this.torf = false;
+      } else{
+        this.player.pause();
+        this.torf = true;
       }
-      return this.playOrPause;
+      // if (this.playOrPause === "@/img/play.png") {
+      //   this.playOrPause = "@/img/pause.png";
+      // } else {
+      //   this.playOrPause = "@/img/play.png";
+      // }
+      // return this.playOrPause;
     },
-    mqtt() {
-      var client = mqtt.connect("mqtt://10.112.163.194/", { port: 1883 });
-      client.on("connect", function() {
-        console.log("connected");
-        debugger;
-      });
-    }
   }
 };
 </script>

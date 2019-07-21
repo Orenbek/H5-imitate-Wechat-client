@@ -2,14 +2,6 @@
   <div class="container">
     <div class="phone-content">
       <transition-group tag="ul" class="msg-list" name="fade">
-        
-        <!-- <li v-for="(item1, index1) in videoList" :key="index1" class="msg">
-          <img class="avatar" :src="myAvatar"/>
-          <div class="video" @click="onVideoPlay(index1)" @touchend.prevent="onVideoPlay(index1)">
-            <img alt="截图" :src="item1.poster">
-          </div>
-        </li> -->
-
         <template v-for="(item, index) in this.Messages[this.choosenId]">
           <!-- 视频消息 -->
           <li v-if="item.type==='video'&&item.userid===userid" :key="index" class="msg">
@@ -65,8 +57,8 @@
         </template>
       </transition-group>
           <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
-          <video ref="facetime1" width="200" ></video>
-          <video ref="facetime2" width="200" ></video>
+          <!-- <video class="mface" ref="facetime1" width="200" ></video>
+          <video class="oface" ref="facetime2" width="200" ></video> -->
           <canvas ref="canvas"></canvas>
           <audio ref="audio"></audio>
     </div>
@@ -77,8 +69,6 @@
         <div class="phone-operate" @mousedown="onVideoMousedown" @touchstart.prevent="onVideoMousedown" 
           @mouseup="onVideoMouseup" @touchend.prevent="onVideoMouseup">{{btnVideo}}</div>
         <div class="controller">
-          <img @click="faseTimeOff" src="@/img/delete.png" alt="清除" />
-          <img @click="faceTimeOn" src="@/img/submit.png" alt="">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
         </div>
@@ -128,6 +118,8 @@ export default {
       bufferBlob,
       buffImgArr: [],
       faceingObjId: '',
+      faceStreamChunks: [],
+      //为了本地测试
     };
   },
   created(){
@@ -158,12 +150,13 @@ export default {
     }
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
-    this.myfacetime = this.$refs.facetime1;
-    this.objfacetime = this.$refs.facetime2;
+    // this.myfacetime = this.$refs.facetime1;
+    // this.objfacetime = this.$refs.facetime2;
     this.canvas = this.$refs.canvas;
     this.ctx = this.canvas.getContext('2d');
     this.requestAudioAccess();
     this.requestVideoAccess();
+    // this.requestFaceTimeAccess();
     this.onInitWs();
   },
   methods: {
@@ -171,7 +164,7 @@ export default {
       this.notedata = "";
     },
     onInitWs() {
-      ws = new WebSocket("ws://10.28.207.54:8000");
+      ws = new WebSocket("ws://localhost:8000");
       ws.addEventListener("open", this.wsOpen);
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
@@ -192,9 +185,9 @@ export default {
         type: "init"
       }
       this.wsSend(initParam);
-      // setInterval(()=>{
-      //   this.wsSend(initParam);
-      // },30000);
+      setInterval(()=>{
+        this.wsSend(initParam);
+      },5000);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -204,11 +197,8 @@ export default {
         console.log("Received arraybuffer");
       }
       if(event.data instanceof Blob){
-        if(this.faceingObjId===''){
           this.buffer(event); 
-        } else{
-          //接受流媒体消息。
-        }
+          //facingObj的逻辑要改
       } else{
           let result = JSON.parse(event.data);
         switch (result.type) {
@@ -248,6 +238,7 @@ export default {
         } else{
         ws.send(message);
         }
+        //websocket每次只能传输一种数据类型(尝试了多种途径一次传输多个，但没有成功)
       } else {
         alert("已经断开socket连接，请重新连接websocket服务器");
       }
@@ -450,7 +441,7 @@ export default {
       this.$set(this.Messages,val.userid,M);
       //生成截图不能在这里写。因为截图是通过canvas生成的，得先canvas渲染。
       //在choosenID变化的时候再渲染当前的截图
-      this.buffImgArr[val.userid] ? this.buffImgArr[val.userid] : [];
+      this.buffImgArr[val.userid]!==undefined ? this.buffImgArr[val.userid] : [];
       this.buffImgArr[val.userid].push(this.index[val.userid]);
       if(val.userid===this.choosenId){
         this.onCapture(val.userid);
@@ -700,16 +691,24 @@ export default {
       this.showMyFaceTime(true);
       let m = {
         userid: this.userid,
-        objectid: [choosenId],
+        objectid: [this.choosenId],
         type: "faceTime",
         state: "launch",
       };
-      this.wsSend(m);
-      this.faceingObjId = choosenId;
+      // this.wsSend(m);
+      // this.faceingObjId = choosenId;
+      this.faceTimeStarted();
     },
 
     getFaceTimeBlob(e){
-      this.wsSend('',e.data);
+      // this.wsSend('',e.data);
+
+      // this.faceStreamChunks.push(e.data);
+      let blob = new Blob(this.faceStreamChunks, { 'type' : 'video/webm' }),
+        objFaceStream = URL.createObjectURL(blob),
+        duration = Math.round(blob.size/80000);
+      this.objFaceStream = objFaceStream;
+      this.showObjFaceTime(true);
     },
 
     showMyFaceTime(show) {
@@ -720,7 +719,7 @@ export default {
         this.myfacetime.play();
       } else{
         this.myfacetime.style.display = 'none';
-        this.video.srcObject = null;
+        this.myfacetime.srcObject = null;
       }
     },
 
@@ -791,20 +790,17 @@ export default {
       } else{
         clearInterval(interval);
       }
-      }, 30);
+      },1000);
     },
 
     receiveFaceStream(blob){
       this.objFaceStream = URL.createObjectURL(blob);
     },
-
-    cancle(){
-      this.showVideo(false);
-      this.onVideoStop();
-    },
     
     faseTimeOff(){
       this.faceTimeRecorder.stop();
+      this.showMyFaceTime(false);
+      this.showObjFaceTime(false)
       // 发送取消FaceTime消息
     }
   }
@@ -1125,9 +1121,18 @@ video {
 	position: absolute;
   width: 400px;
   left: calc(50% - 200px);
-	top: 20px;
+	top: 0px;
 	display: none;
 }
+video.mface{
+  top: 0px;
+  width: 200px;
+}
+video.oface{
+  top: 200px;
+  width: 200px;
+}
+/* 这里新加了些样式 */
 canvas {
 	display: none;
 }

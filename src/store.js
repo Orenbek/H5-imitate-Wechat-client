@@ -6,7 +6,7 @@ export default new Vuex.Store({
   state: {
     mqttServ: 'mqtt://10.112.163.194',
     wsHost: "ws://localhost:8000",
-    choosenId:'',
+    choosenId:'1',
     myAvatar: '',
     session: '',
     username: 'bunny',
