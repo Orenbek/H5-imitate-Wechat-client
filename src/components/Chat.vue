@@ -57,8 +57,8 @@
         </template>
       </transition-group>
           <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
-          <!-- <video class="mface" ref="facetime1" width="200" ></video>
-          <video class="oface" ref="facetime2" width="200" ></video> -->
+          <video class="mface" ref="facetime1" width="200" ></video>
+          <video class="oface" ref="facetime2" width="200" ></video>
           <canvas ref="canvas"></canvas>
           <audio ref="audio"></audio>
     </div>
@@ -150,13 +150,13 @@ export default {
     }
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
-    // this.myfacetime = this.$refs.facetime1;
-    // this.objfacetime = this.$refs.facetime2;
+    this.myfacetime = this.$refs.facetime1;
+    this.objfacetime = this.$refs.facetime2;
     this.canvas = this.$refs.canvas;
     this.ctx = this.canvas.getContext('2d');
     this.requestAudioAccess();
     this.requestVideoAccess();
-    // this.requestFaceTimeAccess();
+    this.requestFaceTimeAccess();
     this.onInitWs();
   },
   methods: {
@@ -185,9 +185,6 @@ export default {
         type: "init"
       }
       this.wsSend(initParam);
-      setInterval(()=>{
-        this.wsSend(initParam);
-      },5000);
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -203,7 +200,7 @@ export default {
           let result = JSON.parse(event.data);
         switch (result.type) {
           case "faceTime":
-            this.wsFaceTimeRequest(result);
+            this.wsFaceTimeMessage(result);
             break;
           case "audio":
             this.wsReceiveAudio(result);
@@ -672,43 +669,15 @@ export default {
       // this.video.srcObject = null;
     },
 
+
     requestFaceTimeAccess(){
       navigator.mediaDevices.getUserMedia({audio: true,video: true}).then(
       faceStream => {
         this.faceTimeRecorder = new window.MediaRecorder(faceStream);
         this.faceStream = faceStream;
-        this.bindFaceTimeEvents();
       }, error => {
           alert('出错，请确保已允许浏览器获取音视频权限');
       });
-    },
-
-    bindFaceTimeEvents () {
-      this.faceTimeRecorder.ondataavailable = this.getFaceTimeBlob;
-    },
-
-    faceTimeOn(){
-      this.showMyFaceTime(true);
-      let m = {
-        userid: this.userid,
-        objectid: [this.choosenId],
-        type: "faceTime",
-        state: "launch",
-      };
-      // this.wsSend(m);
-      // this.faceingObjId = choosenId;
-      this.faceTimeStarted();
-    },
-
-    getFaceTimeBlob(e){
-      // this.wsSend('',e.data);
-
-      // this.faceStreamChunks.push(e.data);
-      let blob = new Blob(this.faceStreamChunks, { 'type' : 'video/webm' }),
-        objFaceStream = URL.createObjectURL(blob),
-        duration = Math.round(blob.size/80000);
-      this.objFaceStream = objFaceStream;
-      this.showObjFaceTime(true);
     },
 
     showMyFaceTime(show) {
@@ -726,34 +695,54 @@ export default {
     showObjFaceTime(show){
       if(show){
         this.objfacetime.style.display = 'block';
-        this.objfacetime.src = this.objFaceStream;
-        this.objfacetime.muted = false;
-        this.objfacetime.play();
+        // this.objfacetime.src = this.objFaceStream;
+        // this.objfacetime.muted = false;
+        // this.objfacetime.play();
       } else{
         this.objfacetime.style.display = 'none';
       }
+      //函数需要再细写
     },
 
-    wsFaceTimeRequest(res){
-      // 收到FaceTime邀请或者发出的邀请的相应。
-      if(res.state==='launch'){
-        //收到邀请 打开我的视角
-        this.faceingObjId = res.objectid[0];
-        if(this.faceingObjId===this.choosenId){
-          this.showMyFaceTime(true);
-        }
-        return;
+    wsFaceTimeMessage(res){
+      // 收到FaceTime邀请或者发出的邀请的相应
+      switch (res.state){
+        case 'launch':
+           //收到邀请 打开我的视角
+          this.faceingObjId = res.objectid[0];
+          if(this.faceingObjId===this.choosenId){
+            this.showMyFaceTime(true);
+          }
+          return;
+        case 'accept':
+          //邀请被接受
+          this.showObjFaceTime(true);
+          //这里开始录制并发送视频了
+          this.faceTimeStarted();
+          return;
+        case 'reject':
+          //邀请被拒绝
+          this.faceingObjId = '';
+          this.showMyFaceTime(false);
+          return;
+        case 'break':
+          this.faceingObjId = '';
+          this.showMyFaceTime(false);
+          this.showObjFaceTime(false);
+          return;
       }
-      if(res.state==='accept'){
-        //邀请被接受
-        this.showObjFaceTime(true);
-        return;
-      }
-      if(res.state==='break'){
-        //邀请被拒绝
-        this.faceingObjId = '';
-        this.showMyFaceTime(false);
-      }
+    },
+
+    faceTimeLaunch(){
+      this.showMyFaceTime(true);
+      let m = {
+        userid: this.userid,
+        objectid: [this.choosenId],
+        type: "faceTime",
+        state: "launch",
+      };
+      this.wsSend(m);
+      this.faceingObjId = this.choosenId;
     },
 
     faceTimeAccept(){
@@ -770,6 +759,20 @@ export default {
 
     faceTimeReject(){
       //给服务器发送拒绝FaceTime消息
+      this.showMyFaceTime(false);
+      let m = {
+        userid: this.userid,
+        objectid: [choosenId],
+        type: "faceTime",
+        state: "reject",
+      };
+      this.wsSend(m);
+      this.faceingObjId = '';
+    },
+
+    faceTimeBreak(){
+      this.showMyFaceTime(false);
+      this.showObjFaceTime(false);
       let m = {
         userid: this.userid,
         objectid: [choosenId],
@@ -783,26 +786,20 @@ export default {
     faceTimeStarted(){
       //开始视频聊天后 打开对方视角 
       this.showObjFaceTime(true)
-      this.faceTimeRecorder.start();
-      var interval = setInterval(() => {
-        if(this.faceTimeRecorder.state==='recording'){
-        this.faceTimeRecorder.requestData();
-      } else{
-        clearInterval(interval);
-      }
-      },1000);
+      // this.faceTimeRecorder.start();
+      // var interval = setInterval(() => {
+      //   if(this.faceTimeRecorder.state==='recording'){
+      //   this.faceTimeRecorder.requestData();
+      // } else{
+      //   clearInterval(interval);
+      // }
+      // },1000);
     },
 
-    receiveFaceStream(blob){
-      this.objFaceStream = URL.createObjectURL(blob);
+    receiveFaceStream(){
+
     },
-    
-    faseTimeOff(){
-      this.faceTimeRecorder.stop();
-      this.showMyFaceTime(false);
-      this.showObjFaceTime(false)
-      // 发送取消FaceTime消息
-    }
+
   }
 };
 </script>
