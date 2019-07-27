@@ -5,70 +5,110 @@
         <template v-for="(item, index) in this.Messages[this.choosenId]">
           <!-- 视频消息 -->
           <li v-if="item.type==='video'&&item.userid===userid" :key="index" class="msg">
-          <img class="avatar" :src="myAvatar"/>
-          <div class="video right" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
-            <img alt="截图" :src="item.poster">
-          </div>
-        </li>
-        <li v-if="item.type==='video'&&item.userid!==userid" :key="index" class="msg">
-          <img class="avatar1" src="https://denzel.netlify.com/hero.png"/>
-          <div class="video left" @click="onVideoPlay(index)" @touchend.prevent="onVideoPlay(index)">
-            <img alt="截图" :src="item.poster">
-          </div>
-        </li>
-        <!-- 音频消息 -->
-        <li v-if="item.type==='audio'&&item.userid===userid" :key="index"
-          class="msg" @click="onAudioPlay(index)" @touchend.prevent="onAudioPlay(index)">
-          <img class="avatar" :src="myAvatar" />
-          <div v-cloak class="audio right" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}">
-            <span>(</span>
-            <span>(</span>
-            <span>(</span>
-          </div>
-          <div class="duration">{{item.duration}}"</div>
-        </li>
-        <li v-if="item.type==='audio'&&item.userid!==userid" :key="index"
-          class="msg" @click="onAudioPlay(index)" @touchend.prevent="onAudioPlay(index)">
-          <img class="avatar1" src="https://denzel.netlify.com/hero.png"/>
-          <div v-cloak class="audio left" :style="{width: 20 * item.duration + 'px'}" :class="{wink: item.wink}" >
-            <span>)</span>
-            <span>)</span>
-            <span>)</span>
-          </div>
-          <div class="duration1">{{item.duration}}"</div>
-        </li>
-        <!-- 文本消息 -->
-        <li v-if="item.type==='text'&&item.userid===userid" :key="index" class="textlist te1">
-           <img class="avatar av1" :src="myAvatar"/>
-          <div class="textmes tm1">
-            <div class="textcontent tt1">
-                <pre class="pre">{{item.mes}}</pre>
+            <img class="avatar" :src="myAvatar" />
+            <div
+              class="video right"
+              @click="onVideoPlay(index)"
+              @touchend.prevent="onVideoPlay(index)"
+            >
+              <img alt="截图" :src="item.poster" />
             </div>
-          </div>
-        </li>
-        <li v-if="item.type==='text'&&item.userid!==userid" :key="index" class="textlist te2">
-           <div class="avatar av2" ></div>
-          <div class="textmes tm2">
-            <div class="textcontent tt2">
-                <pre class="pre">{{item.mes}}</pre>
+          </li>
+          <li v-if="item.type==='video'&&item.userid!==userid" :key="index" class="msg">
+            <img class="avatar1" src="https://denzel.netlify.com/hero.png" />
+            <div
+              class="video left"
+              @click="onVideoPlay(index)"
+              @touchend.prevent="onVideoPlay(index)"
+            >
+              <img alt="截图" :src="item.poster" />
             </div>
-          </div>
-        </li>
+          </li>
+          <!-- 音频消息 -->
+          <li
+            v-if="item.type==='audio'&&item.userid===userid"
+            :key="index"
+            class="msg"
+            @click="onAudioPlay(index)"
+            @touchend.prevent="onAudioPlay(index)"
+          >
+            <img class="avatar" :src="myAvatar" />
+            <div
+              v-cloak
+              class="audio right"
+              :style="{width: 20 * item.duration + 'px'}"
+              :class="{wink: item.wink}"
+            >
+              <span>(</span>
+              <span>(</span>
+              <span>(</span>
+            </div>
+            <div class="duration">{{item.duration}}"</div>
+          </li>
+          <li
+            v-if="item.type==='audio'&&item.userid!==userid"
+            :key="index"
+            class="msg"
+            @click="onAudioPlay(index)"
+            @touchend.prevent="onAudioPlay(index)"
+          >
+            <img class="avatar1" src="https://denzel.netlify.com/hero.png" />
+            <div
+              v-cloak
+              class="audio left"
+              :style="{width: 20 * item.duration + 'px'}"
+              :class="{wink: item.wink}"
+            >
+              <span>)</span>
+              <span>)</span>
+              <span>)</span>
+            </div>
+            <div class="duration1">{{item.duration}}"</div>
+          </li>
+          <!-- 文本消息 -->
+          <li v-if="item.type==='text'&&item.userid===userid" :key="index" class="textlist te1">
+            <img class="avatar av1" :src="myAvatar" />
+            <div class="textmes tm1">
+              <div class="textcontent tt1">
+                <pre class="pre">{{item.mes}}</pre>
+              </div>
+            </div>
+          </li>
+          <li v-if="item.type==='text'&&item.userid!==userid" :key="index" class="textlist te2">
+            <div class="avatar av2"></div>
+            <div class="textmes tm2">
+              <div class="textcontent tt2">
+                <pre class="pre">{{item.mes}}</pre>
+              </div>
+            </div>
+          </li>
         </template>
       </transition-group>
-          <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
-          <video class="mface" ref="facetime1" width="200" ></video>
-          <video class="oface" ref="facetime2" width="200" ></video>
-          <canvas ref="canvas"></canvas>
-          <audio ref="audio"></audio>
+      <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
+      <video class="mface" ref="facetime1" width="200"></video>
+      <canvas class="oface" ref="facetime2" width="200"></canvas>
+      <canvas ref="canvas"></canvas>
+      <audio ref="audio"></audio>
     </div>
     <div class="buttom">
       <div class="bq">
-        <div class="phone-operate" @mousedown="onAudioMousedown" @touchstart.prevent="onAudioMousedown"
-          @mouseup="onAudioMouseup" @touchend.prevent="onAudioMouseup">{{btnAudio}}</div>
-        <div class="phone-operate" @mousedown="onVideoMousedown" @touchstart.prevent="onVideoMousedown" 
-          @mouseup="onVideoMouseup" @touchend.prevent="onVideoMouseup">{{btnVideo}}</div>
+        <div
+          class="phone-operate"
+          @mousedown="onAudioMousedown"
+          @touchstart.prevent="onAudioMousedown"
+          @mouseup="onAudioMouseup"
+          @touchend.prevent="onAudioMouseup"
+        >{{btnAudio}}</div>
+        <div
+          class="phone-operate"
+          @mousedown="onVideoMousedown"
+          @touchstart.prevent="onVideoMousedown"
+          @mouseup="onVideoMouseup"
+          @touchend.prevent="onVideoMouseup"
+        >{{btnVideo}}</div>
         <div class="controller">
+          <button @click="faceTimeStarted">点击</button>
+          <button @click="faceTimeStop">停止</button>
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
         </div>
@@ -81,9 +121,18 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
-import { format } from 'path';
-import Trans from "@/assets/transport.js"
-var ws;
+import { format } from "path";
+import Trans from "@/assets/transport.js";
+import axios from "axios";
+const JsMpeg = require("@/services/jsmpeg.min.js");
+let ws;
+
+const localServ = axios.create({
+  baseURL: "http://127.0.0.1:5000/",
+  timeout: 1000
+});
+const WS_URL = "ws://localhost:8000";
+
 export default {
   props: {},
   components: {},
@@ -103,42 +152,37 @@ export default {
       videoList: [],
       //包含整个语音消息，包含我的和对方的
       noteList: [],
-      //包含整个文字信息，包含我的和对方的
-      // currentNoteList: [],
-      // //包含当前我和当前用户之间的文字消息
-      // currentChunkList: [],
-      // //包含当前我的当前用户之间的语音消息
-      // currentMessage: [],
-      // //包含当前我和当前用户之间的所有消息
       Messages: [],
       // choosenId: choosenId ? choosenId : "",
-      choosenId: '',
-      index:[],
+      choosenId: "",
+      index: [],
       bufferParam: {},
       bufferBlob,
       buffImgArr: [],
-      faceingObjId: '',
-      faceStreamChunks: [],
+      faceingObjId: "",
+      faceStreamChunks: []
       //为了本地测试
     };
   },
-  created(){
-    Trans.$on('choose',(data)=>{
-        this.choosenId = data;
-      })
+  created() {
+    Trans.$on("choose", data => {
+      this.choosenId = data;
+    });
     // this.onCapture(val.userid,this.index[val.userid]);
   },
   watch: {
-    choosenId(){
-      if(this.buffImgArr[this.choosenId]&&this.buffImgArr[this.choosenId]!==undefined){
+    choosenId() {
+      if (
+        this.buffImgArr[this.choosenId] &&
+        this.buffImgArr[this.choosenId] !== undefined
+      ) {
         this.onCapture(this.choosenId);
-      } else{
+      } else {
         this.buffImgArr[this.choosenId] = [];
       }
     }
   },
-  computed: {
-  },
+  computed: {},
   mounted: function() {
     if (!navigator.mediaDevices) {
       alert("您的浏览器不支持获取用户设备");
@@ -153,23 +197,29 @@ export default {
     this.myfacetime = this.$refs.facetime1;
     this.objfacetime = this.$refs.facetime2;
     this.canvas = this.$refs.canvas;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
     this.requestAudioAccess();
     this.requestVideoAccess();
     this.requestFaceTimeAccess();
     this.onInitWs();
+    this.faceTimePlayer = new JsMpeg.Player(WS_URL, {
+      canvas: this.canvas,
+      videoBufferSize: 1024 * 512,
+      audioBufferSize: 1024,
+      progressive: false
+    });
   },
   methods: {
     onDelete() {
       this.notedata = "";
     },
     onInitWs() {
-      ws = new WebSocket("ws://localhost:8000");
+      ws = new WebSocket(WS_URL);
       ws.addEventListener("open", this.wsOpen);
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
-      
+
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -181,9 +231,9 @@ export default {
       console.log("connected! ", e);
       let initParam = {
         userid: store.state.userid,
-        objectid: [''],
+        objectid: [""],
         type: "init"
-      }
+      };
       this.wsSend(initParam);
     },
     wsMessage(event) {
@@ -193,11 +243,11 @@ export default {
       if (event.data instanceof ArrayBuffer) {
         console.log("Received arraybuffer");
       }
-      if(event.data instanceof Blob){
-          this.buffer(event); 
-          //facingObj的逻辑要改
-      } else{
-          let result = JSON.parse(event.data);
+      if (event.data instanceof Blob) {
+        this.buffer(event);
+        //facingObj的逻辑要改
+      } else {
+        let result = JSON.parse(event.data);
         switch (result.type) {
           case "faceTime":
             this.wsFaceTimeMessage(result);
@@ -212,14 +262,13 @@ export default {
             this.wsReceiveText(result);
             break;
           case "hash":
-            this.SendItBack(result)
+            this.SendItBack(result);
             break;
           case "userList":
-            store.commit('set',{key:'userList',val:result.userList});
+            store.commit("set", { key: "userList", val: result.userList });
             break;
         }
       }
-      
     },
     wsClose(event) {
       console.log("已经关闭连接");
@@ -227,13 +276,13 @@ export default {
     wsError() {
       console.log("连接出现问题");
     },
-    wsSend(message,blob) {
+    wsSend(message, blob) {
       if (ws.readyState == WebSocket.OPEN) {
         message = JSON.stringify(message);
-        if(blob){
+        if (blob) {
           ws.send(blob);
-        } else{
-        ws.send(message);
+        } else {
+          ws.send(message);
         }
         //websocket每次只能传输一种数据类型(尝试了多种途径一次传输多个，但没有成功)
       } else {
@@ -251,28 +300,28 @@ export default {
         type: "text"
       };
       this.wsSend(m);
-      this.notedata = '';
+      this.notedata = "";
       //收到的消息，应该push进发来消息对应的userid下面
-      if(!this.index[choosenId]){
+      if (!this.index[choosenId]) {
         this.index[choosenId] = 0;
       }
-      
+
       m.index = this.index[choosenId];
       let arr = this.noteList[choosenId];
-      if(arr===undefined){
+      if (arr === undefined) {
         arr = [];
       }
       arr.push(m);
       this.noteList[choosenId] = arr;
       // this.$set(this.noteList,choosenId,arr);
       let M = this.Messages[choosenId];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
 
-      M.push(...arr)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,choosenId,M);
+      M.push(...arr);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, choosenId, M);
 
       this.index[choosenId] += 1;
     },
@@ -285,36 +334,41 @@ export default {
         type: "audio"
       };
       this.bufferParam = m;
-      this.wsSend('',blob);
+      this.wsSend("", blob);
       this.audioChunks = [];
 
-      if(!this.index[choosenId]){
+      if (!this.index[choosenId]) {
         this.index[choosenId] = 0;
       }
-      
+
       let cList = this.audioList[choosenId];
       if (!cList) {
         this.audioList[choosenId] = [];
         cList = [];
       }
-      cList.push({ duration: duration, audioStream: audioStream, 
-      type: 'audio', userid: store.state.userid, index: this.index[choosenId] });
+      cList.push({
+        duration: duration,
+        audioStream: audioStream,
+        type: "audio",
+        userid: store.state.userid,
+        index: this.index[choosenId]
+      });
       this.audioList[choosenId] = cList;
       // this.$set(this.audioList,choosenId,cList);
-      
+
       //收到的消息，应该push进发来消息对应的userid下面
       let M = this.Messages[choosenId];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
-      
-      M.push(...cList)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,choosenId,M);
 
-      this.index[choosenId]+=1;
+      M.push(...cList);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, choosenId, M);
+
+      this.index[choosenId] += 1;
     },
-    wsSendVideo(blob, videoStream, duration){
+    wsSendVideo(blob, videoStream, duration) {
       let choosenId = this.choosenId;
       let m = {
         duration: duration,
@@ -323,34 +377,39 @@ export default {
         type: "video"
       };
       this.bufferParam = m;
-      this.wsSend('',blob);
+      this.wsSend("", blob);
       this.videoChunks = [];
 
-      if(!this.index[choosenId]){
+      if (!this.index[choosenId]) {
         this.index[choosenId] = 0;
       }
-      
+
       let vList = this.videoList[choosenId];
       if (!vList) {
         this.videoList[choosenId] = [];
         vList = [];
       }
-      vList.push({ duration: duration, videoStream: videoStream, 
-      type: 'video', userid: store.state.userid, index: this.index[choosenId] });
+      vList.push({
+        duration: duration,
+        videoStream: videoStream,
+        type: "video",
+        userid: store.state.userid,
+        index: this.index[choosenId]
+      });
       this.videoList[choosenId] = vList;
       // this.$set(this.videoList,choosenId,vList);
 
       //收到的消息，应该push进发来消息对应的userid下面
       let M = this.Messages[choosenId];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
-      M.push(...vList)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,choosenId,M);
-      
+      M.push(...vList);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, choosenId, M);
+
       this.buffImgArr[choosenId] ? this.buffImgArr[choosenId] : [];
-      console.log('choosenId ',this.buffImgArr[choosenId]);
+      console.log("choosenId ", this.buffImgArr[choosenId]);
       this.buffImgArr[choosenId].push(this.index[choosenId]);
       this.onCapture(choosenId);
       //生成截图
@@ -358,17 +417,17 @@ export default {
       this.showVideo(false);
       this.video.srcObject = null;
 
-      this.index[choosenId]+=1;
+      this.index[choosenId] += 1;
     },
     wsReceiveText(val) {
       //收到的消息，应该push进发来消息对应的userid下面
-      if(!this.index[val.userid]){
+      if (!this.index[val.userid]) {
         this.index[val.userid] = 0;
       }
 
       val.index = this.index[val.userid];
       let arr = this.noteList[val.userid];
-      if(arr===undefined){
+      if (arr === undefined) {
         arr = [];
       }
       arr.push(val);
@@ -376,26 +435,26 @@ export default {
       // this.$set(this.noteList,val.userid,arr);
 
       let M = this.Messages[val.userid];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
 
-      M.push(...arr)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,val.userid,M);
+      M.push(...arr);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, val.userid, M);
 
       this.index[val.userid] += 1;
     },
     wsReceiveAudio(val) {
       let audioStream = URL.createObjectURL(this.bufferBlob);
       val.audioStream = audioStream;
-      if(!this.index[val.userid]){
+      if (!this.index[val.userid]) {
         this.index[val.userid] = 0;
       }
 
       val.index = this.index[val.userid];
       let arr = this.audioList[val.userid];
-      if(arr===undefined){
+      if (arr === undefined) {
         arr = [];
       }
       arr.push(val);
@@ -403,26 +462,26 @@ export default {
       // this.$set(this.audioList,val.userid,arr);
 
       let M = this.Messages[val.userid];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
 
-      M.push(...arr)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,val.userid,M);
+      M.push(...arr);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, val.userid, M);
 
       this.index[val.userid] += 1;
     },
     wsReceiveVideo(val) {
       let videoStream = URL.createObjectURL(this.bufferBlob);
       val.videoStream = videoStream;
-      if(!this.index[val.userid]){
+      if (!this.index[val.userid]) {
         this.index[val.userid] = 0;
       }
 
       val.index = this.index[val.userid];
       let arr = this.videoList[val.userid];
-      if(arr===undefined){
+      if (arr === undefined) {
         arr = [];
       }
       arr.push(val);
@@ -430,34 +489,36 @@ export default {
       // this.$set(this.videoList,val.userid,arr);
 
       let M = this.Messages[val.userid];
-      if(M===undefined){
+      if (M === undefined) {
         M = [];
       }
-      M.push(...arr)
-      M = Array.from(new Set(M))
-      this.$set(this.Messages,val.userid,M);
+      M.push(...arr);
+      M = Array.from(new Set(M));
+      this.$set(this.Messages, val.userid, M);
       //生成截图不能在这里写。因为截图是通过canvas生成的，得先canvas渲染。
       //在choosenID变化的时候再渲染当前的截图
-      this.buffImgArr[val.userid]!==undefined ? this.buffImgArr[val.userid] : [];
+      this.buffImgArr[val.userid] !== undefined
+        ? this.buffImgArr[val.userid]
+        : [];
       this.buffImgArr[val.userid].push(this.index[val.userid]);
-      if(val.userid===this.choosenId){
+      if (val.userid === this.choosenId) {
         this.onCapture(val.userid);
-      } 
+      }
 
       this.index[val.userid] += 1;
     },
-    SendItBack(res){
+    SendItBack(res) {
       console.log(res);
       let par = this.bufferParam;
       par.random = res.random;
-      ws.send(JSON.stringify(par))
+      ws.send(JSON.stringify(par));
     },
-    buffer(event){
+    buffer(event) {
       this.bufferBlob = event.data;
     },
 
     requestAudioAccess() {
-      navigator.mediaDevices.getUserMedia({audio: true}).then(
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(
         audioStream => {
           this.audioRecorder = new window.MediaRecorder(audioStream);
           this.audioStream = audioStream;
@@ -469,15 +530,17 @@ export default {
       );
     },
 
-    requestVideoAccess(){
-      navigator.mediaDevices.getUserMedia({audio: true,video: true}).then(
-      videoStream => {
-        this.videoRecorder = new window.MediaRecorder(videoStream);
-        this.videoStream = videoStream;
-        this.bindVideoEvents();
-      }, error => {
-          alert('出错，请确保已允许浏览器获取音视频权限');
-      });
+    requestVideoAccess() {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(
+        videoStream => {
+          this.videoRecorder = new window.MediaRecorder(videoStream);
+          this.videoStream = videoStream;
+          this.bindVideoEvents();
+        },
+        error => {
+          alert("出错，请确保已允许浏览器获取音视频权限");
+        }
+      );
     },
 
     onAudioMousedown() {
@@ -490,30 +553,30 @@ export default {
       this.btnAudio = "按住说话";
     },
 
-    onVideoMousedown () {
+    onVideoMousedown() {
       this.showVideo(true);
       this.onPreview();
-      this.btnVideo = '松开结束';
-      this.onVideoStart(); 
+      this.btnVideo = "松开结束";
+      this.onVideoStart();
     },
 
-    onVideoMouseup () {
+    onVideoMouseup() {
       this.onVideoStop();
-      this.btnVideo = '按住拍视频';
+      this.btnVideo = "按住拍视频";
     },
 
-    onPreview () {
+    onPreview() {
       this.video.srcObject = this.videoStream;
       this.video.muted = true;
       this.video.play();
     },
 
-    showVideo (bShow) {
-      if(bShow) {
-        this.video.style.display = 'block';
+    showVideo(bShow) {
+      if (bShow) {
+        this.video.style.display = "block";
       } else {
-        this.video.style.display = 'none';
-				this.video.pause();
+        this.video.style.display = "none";
+        this.video.pause();
       }
     },
 
@@ -525,17 +588,17 @@ export default {
       this.audioRecorder.stop();
     },
 
-    onVideoStart () {
+    onVideoStart() {
       this.videoRecorder.start();
     },
 
-    onVideoStop () {
+    onVideoStop() {
       this.videoRecorder.stop();
     },
 
     onAudioPlay(index) {
       let choosenId = this.choosenId;
-      let ITEM = this.Messages[choosenId][index]
+      let ITEM = this.Messages[choosenId][index];
       index = this.audioList[choosenId].indexOf(ITEM);
       let cList = this.audioList[choosenId];
       if (!cList) {
@@ -553,10 +616,10 @@ export default {
       this.AudioEvent(index);
     },
 
-    onVideoPlay (index) {
+    onVideoPlay(index) {
       this.showVideo(true);
       let choosenId = this.choosenId;
-      let ITEM = this.Messages[choosenId][index]
+      let ITEM = this.Messages[choosenId][index];
       index = this.videoList[choosenId].indexOf(ITEM);
       let vList = this.videoList[choosenId];
       if (!vList) {
@@ -589,10 +652,10 @@ export default {
       };
     },
 
-    VideoEvent () {
+    VideoEvent() {
       this.video.onended = () => {
-      this.showVideo(false);
-      }
+        this.showVideo(false);
+      };
     },
 
     bindAudioEvents() {
@@ -600,7 +663,7 @@ export default {
       this.audioRecorder.onstop = this.saveAudioRecordingData;
     },
 
-    bindVideoEvents () {
+    bindVideoEvents() {
       this.videoRecorder.ondataavailable = this.getVideoRecordingData;
       this.videoRecorder.onstop = this.saveVideoRecordingData;
     },
@@ -609,7 +672,7 @@ export default {
       this.audioChunks.push(e.data);
     },
 
-    getVideoRecordingData (e) {
+    getVideoRecordingData(e) {
       this.videoChunks.push(e.data);
     },
 
@@ -626,13 +689,13 @@ export default {
       if (duration > 60) {
         duration = 60;
       }
-      this.wsSendAudio(blob, audioStream,duration);
+      this.wsSendAudio(blob, audioStream, duration);
     },
 
     saveVideoRecordingData() {
-      let blob = new Blob(this.videoChunks, { 'type' : 'video/webm' }),
+      let blob = new Blob(this.videoChunks, { type: "video/webm" }),
         videoStream = URL.createObjectURL(blob),
-        duration = Math.round(blob.size/80000);
+        duration = Math.round(blob.size / 80000);
 
       if (duration <= 0) {
         //隐藏video
@@ -645,22 +708,28 @@ export default {
       if (duration > 60) {
         duration = 60;
       }
-      this.wsSendVideo(blob,videoStream,duration);
+      this.wsSendVideo(blob, videoStream, duration);
     },
 
     //获取视频截图
-    onCapture (userid) {
+    onCapture(userid) {
       let i;
       let buffArr = this.buffImgArr[userid];
-      console.log('12',this.buffImgArr);
-      console.log('333',this.Messages[userid]);
-      for(i in buffArr){
+      console.log("12", this.buffImgArr);
+      console.log("333", this.Messages[userid]);
+      for (i in buffArr) {
         let item = this.Messages[userid][buffArr[i]];
-        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(
+          this.video,
+          0,
+          0,
+          this.canvas.width,
+          this.canvas.height
+        );
 
-        this.canvas.toBlob((blob) => {
+        this.canvas.toBlob(blob => {
           let src = URL.createObjectURL(blob);
-          this.$set(item, 'poster', src);
+          this.$set(item, "poster", src);
         });
       }
       this.buffImgArr[userid] = [];
@@ -669,137 +738,141 @@ export default {
       // this.video.srcObject = null;
     },
 
-
-    requestFaceTimeAccess(){
-      navigator.mediaDevices.getUserMedia({audio: true,video: true}).then(
-      faceStream => {
-        this.faceTimeRecorder = new window.MediaRecorder(faceStream);
-        this.faceStream = faceStream;
-      }, error => {
-          alert('出错，请确保已允许浏览器获取音视频权限');
-      });
+    requestFaceTimeAccess() {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(
+        faceStream => {
+          // this.faceTimeRecorder = new window.MediaRecorder(faceStream);
+          this.faceStream = faceStream;
+        },
+        error => {
+          alert("出错，请确保已允许浏览器获取音视频权限");
+        }
+      );
     },
 
     showMyFaceTime(show) {
-      if(show){
-        this.myfacetime.style.display = 'block';
+      if (show) {
+        this.myfacetime.style.display = "block";
         this.myfacetime.srcObject = this.faceStream;
         this.myfacetime.muted = true;
         this.myfacetime.play();
-      } else{
-        this.myfacetime.style.display = 'none';
+      } else {
+        this.myfacetime.style.display = "none";
         this.myfacetime.srcObject = null;
       }
     },
 
-    showObjFaceTime(show){
-      if(show){
-        this.objfacetime.style.display = 'block';
+    showObjFaceTime(show) {
+      if (show) {
+        this.objfacetime.style.display = "block";
         // this.objfacetime.src = this.objFaceStream;
         // this.objfacetime.muted = false;
         // this.objfacetime.play();
-      } else{
-        this.objfacetime.style.display = 'none';
+        this.faceTimePlayer.play();
+      } else {
+        this.objfacetime.style.display = "none";
       }
       //函数需要再细写
     },
 
-    wsFaceTimeMessage(res){
+    wsFaceTimeMessage(res) {
       // 收到FaceTime邀请或者发出的邀请的相应
-      switch (res.state){
-        case 'launch':
-           //收到邀请 打开我的视角
+      switch (res.state) {
+        case "launch":
+          //收到邀请 打开我的视角
           this.faceingObjId = res.objectid[0];
-          if(this.faceingObjId===this.choosenId){
+          if (this.faceingObjId === this.choosenId) {
             this.showMyFaceTime(true);
           }
           return;
-        case 'accept':
+        case "accept":
           //邀请被接受
-          this.showObjFaceTime(true);
           //这里开始录制并发送视频了
+          //开始视频聊天后 打开对方视角
+          this.showObjFaceTime(true);
           this.faceTimeStarted();
           return;
-        case 'reject':
+        case "reject":
           //邀请被拒绝
-          this.faceingObjId = '';
+          this.faceingObjId = "";
+          this.faceTimeStop();
           this.showMyFaceTime(false);
           return;
-        case 'break':
-          this.faceingObjId = '';
+        case "break":
+          this.faceingObjId = "";
+          this.faceTimeStop();
           this.showMyFaceTime(false);
           this.showObjFaceTime(false);
           return;
       }
     },
 
-    faceTimeLaunch(){
+    faceTimeLaunch() {
       this.showMyFaceTime(true);
       let m = {
         userid: this.userid,
         objectid: [this.choosenId],
         type: "faceTime",
-        state: "launch",
+        state: "launch"
       };
       this.wsSend(m);
       this.faceingObjId = this.choosenId;
     },
 
-    faceTimeAccept(){
+    faceTimeAccept() {
       //给服务器发送接受FaceTime消息
       let m = {
         userid: this.userid,
-        objectid: [choosenId],
+        objectid: [this.choosenId],
         type: "faceTime",
-        state: "accept",
+        state: "accept"
       };
       this.wsSend(m);
+      //开始视频聊天后 打开对方视角
+      this.showObjFaceTime(true);
       this.faceTimeStarted();
     },
 
-    faceTimeReject(){
+    faceTimeReject() {
       //给服务器发送拒绝FaceTime消息
       this.showMyFaceTime(false);
       let m = {
         userid: this.userid,
-        objectid: [choosenId],
+        objectid: [this.choosenId],
         type: "faceTime",
-        state: "reject",
+        state: "reject"
       };
       this.wsSend(m);
-      this.faceingObjId = '';
+      this.faceingObjId = "";
     },
 
-    faceTimeBreak(){
+    faceTimeBreak() {
+      this.faceTimeStop();
       this.showMyFaceTime(false);
       this.showObjFaceTime(false);
       let m = {
         userid: this.userid,
-        objectid: [choosenId],
+        objectid: [this.choosenId],
         type: "faceTime",
-        state: "break",
+        state: "break"
       };
       this.wsSend(m);
-      this.faceingObjId = '';
+      this.faceingObjId = "";
     },
 
-    faceTimeStarted(){
-      //开始视频聊天后 打开对方视角 
-      this.showObjFaceTime(true)
-      // this.faceTimeRecorder.start();
-      // var interval = setInterval(() => {
-      //   if(this.faceTimeRecorder.state==='recording'){
-      //   this.faceTimeRecorder.requestData();
-      // } else{
-      //   clearInterval(interval);
-      // }
-      // },1000);
+    faceTimeStarted() {
+      localServ.get("?run=1").then(res => {
+        console.log(res.data.state);
+      });
     },
 
-    receiveFaceStream(){
-
+    faceTimeStop() {
+      localServ.get("").then(res => {
+        console.log(res.data.state);
+      });
     },
 
+    receiveFaceStream() {}
   }
 };
 </script>
@@ -836,7 +909,7 @@ export default {
   margin-top: 2px;
   cursor: pointer;
 }
-.controller img:hover{
+.controller img:hover {
   background: rgba(133, 127, 127, 0.3);
 }
 .textarea {
@@ -930,7 +1003,7 @@ export default {
   text-align: right;
   background-color: rgba(107, 197, 107, 0.85);
 }
-.msg-list .msg .audio.right{
+.msg-list .msg .audio.right {
   margin-right: 6px;
   text-align: right;
   background-color: rgba(107, 197, 107, 0.85);
@@ -1038,7 +1111,7 @@ export default {
   }
 }
 
-.textmes{
+.textmes {
   word-wrap: break-word;
   word-break: break-all;
   min-height: 25px;
@@ -1050,17 +1123,17 @@ export default {
   border-radius: 2px;
   color: #000;
 }
-.textmes.tm1{
+.textmes.tm1 {
   margin-right: 6px;
   text-align: right;
   background-color: rgba(107, 197, 107, 0.85);
 }
-.textmes.tm2{
+.textmes.tm2 {
   margin-left: 6px;
   text-align: left;
   background-color: rgba(194, 194, 194, 0.678);
 }
-.textmes::before{
+.textmes::before {
   position: absolute;
   top: 8px;
   content: "";
@@ -1070,91 +1143,91 @@ export default {
   border-style: solid;
   border-width: 4px;
 }
-.textmes.tm1::before{
+.textmes.tm1::before {
   right: -8px;
   border-color: transparent transparent transparent rgba(107, 197, 107, 0.85);
 }
-.textmes.tm2:before{
+.textmes.tm2:before {
   left: -8px;
   border-color: transparent rgba(194, 194, 194, 0.678) transparent transparent;
 }
-.textcontent{
+.textcontent {
   padding: 9px 13px;
   word-break: break-all;
   font-size: 14px;
 }
-.textcontent.tt1{
+.textcontent.tt1 {
   text-align: left;
 }
-.textcontent.tt2{
+.textcontent.tt2 {
   text-align: right;
 }
-.pre{
+.pre {
   margin: 0;
   font-family: inherit;
   font-size: inherit;
   white-space: pre-wrap;
   word-break: normal;
 }
-.textlist{
+.textlist {
   list-style: none;
   padding: 0 8px;
   margin: 10px 0;
   overflow: hidden;
 }
 .textlist .tm1,
-.textlist .av1{
+.textlist .av1 {
   float: right;
 }
 .textlist .tm2,
-.textlist .av2{
+.textlist .av2 {
   float: left;
 }
-.textlist .av2{
-  background: url('https://denzel.netlify.com/hero.png') 0 0;
+.textlist .av2 {
+  background: url("https://denzel.netlify.com/hero.png") 0 0;
 }
 
 video {
-	position: absolute;
+  position: absolute;
   width: 400px;
   left: calc(50% - 200px);
-	top: 0px;
-	display: none;
+  top: 0px;
+  display: none;
 }
-video.mface{
+video.mface {
   top: 0px;
   width: 200px;
 }
-video.oface{
+video.oface {
   top: 200px;
   width: 200px;
 }
 /* 这里新加了些样式 */
 canvas {
-	display: none;
+  display: none;
 }
 .msg-list .msg .video {
-	position: relative;
-	width: 100px;
-	height: 75px;
-	border-radius: 4px;
-	overflow: hidden;
-	color: rgba(255, 255, 255, .8);
-	text-align: center;
-	font-size: 0;
-	cursor: pointer;
+  position: relative;
+  width: 100px;
+  height: 75px;
+  border-radius: 4px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  font-size: 0;
+  cursor: pointer;
 }
-.msg-list .msg .video.right{
+.msg-list .msg .video.right {
   float: right;
-	margin-right: 6px;
+  margin-right: 6px;
 }
-.msg-list .msg .video.left{
+.msg-list .msg .video.left {
   float: left;
-	margin-left: 6px;
+  margin-left: 6px;
 }
 .msg-list .msg .video img {
-	width: 100%;
-	height: 100%;
-	background-color: #636e72;
+  width: 100%;
+  height: 100%;
+  background-color: #636e72;
 }
 </style>
