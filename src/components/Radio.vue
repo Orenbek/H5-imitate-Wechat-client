@@ -17,14 +17,14 @@
 </template>
 
 <script>
-require('@/services/jsmpeg.min.js');
+// require('@/services/jsmpeg.min.js');
 export default {
-  data() {
-    const publicPath = process.env.BASE_URL;
-    const url = `${publicPath}/out.ts`;
-    const player = new JSMpeg.Player(url)
-    return { playOrPause: "@/img/play.png", torf: false, player,url };
-  },
+  // data() {
+  //   // const publicPath = process.env.BASE_URL;
+  //   // const url = `${publicPath}/out.ts`;
+  //   // const player = new JSMpeg.Player(url)
+  //   // return { playOrPause: "@/img/play.png", torf: false, player,url };
+  // },
   computed: {
     // playOrPause: function(){
     //   if(this.playOrPause==='@/img/play.png'){

@@ -85,8 +85,8 @@
         </template>
       </transition-group>
       <video ref="video" width="200" @click="showVideo(false)" @touchend.prevent="showVideo(false)"></video>
-      <video class="mface" ref="facetime1" width="200"></video>
-      <canvas class="oface" ref="facetime2" width="200"></canvas>
+      <video class="mface" ref="facetime1" width="400"></video>
+      <canvas class="oface" ref="facetime2" width="400"></canvas>
       <canvas ref="canvas"></canvas>
       <audio ref="audio"></audio>
     </div>
@@ -107,13 +107,17 @@
           @touchend.prevent="onVideoMouseup"
         >{{btnVideo}}</div>
         <div class="controller">
-          <button @click="faceTimeStarted">点击</button>
-          <button @click="faceTimeStop">停止</button>
+          <img v-if="faceingObjId===choosenId&&faceRequest" src="@/img/phone-call.png" class="animated infinite tada" alt="">
+          <img v-else @click="faceTimeStarted" src="@/img/phone.png" alt="">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
-          <img @click="wsSendText" style="margin: 2px 12px 0;" src="@/img/submit.png" alt="发送" />
+          <img @click="wsSendText" src="@/img/submit.png" alt="发送" />
         </div>
       </div>
       <textarea class="textarea" v-model="notedata" autofocus placeholder="在此输入发送的消息..."></textarea>
+    </div>
+    <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="mask"></div>
+    <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="hangup animated infinite pulse">
+      <img @click="faceTimeStop" src="@/img/hangup.png" alt="">
     </div>
   </div>
 </template>
@@ -124,14 +128,14 @@ import store from "@/store";
 import { format } from "path";
 import Trans from "@/assets/transport.js";
 import axios from "axios";
-const JsMpeg = require("@/services/jsmpeg.min.js");
-let ws;
+let ws, facews;
 
 const localServ = axios.create({
   baseURL: "http://127.0.0.1:5000/",
   timeout: 1000
 });
-const WS_URL = "ws://localhost:8000";
+const WS_URL = "ws://localhost:8000",
+  FACEWS_URL = "ws://localhost:8002";
 
 export default {
   props: {},
@@ -154,13 +158,14 @@ export default {
       noteList: [],
       Messages: [],
       // choosenId: choosenId ? choosenId : "",
-      choosenId: "",
+      choosenId: userid,
       index: [],
       bufferParam: {},
       bufferBlob,
       buffImgArr: [],
       faceingObjId: "",
-      faceStreamChunks: []
+      faceStreamChunks: [],
+      faceRequest: false
       //为了本地测试
     };
   },
@@ -169,6 +174,10 @@ export default {
       this.choosenId = data;
     });
     // this.onCapture(val.userid,this.index[val.userid]);
+    var context = new AudioContext();
+    if (context.state !== "running") {
+      context.resume();
+    }
   },
   watch: {
     choosenId() {
@@ -202,7 +211,7 @@ export default {
     this.requestVideoAccess();
     this.requestFaceTimeAccess();
     this.onInitWs();
-    this.faceTimePlayer = new JsMpeg.Player(WS_URL, {
+    this.faceTimePlayer = new JSMpeg.Player(FACEWS_URL, {
       canvas: this.canvas,
       videoBufferSize: 1024 * 512,
       audioBufferSize: 1024,
@@ -215,11 +224,15 @@ export default {
     },
     onInitWs() {
       ws = new WebSocket(WS_URL);
+      facews = new WebSocket(FACEWS_URL);
       ws.addEventListener("open", this.wsOpen);
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
-
+      facews.addEventListener("open", this.wsOpen);
+      facews.addEventListener("message", this.wsMessage);
+      facews.addEventListener("close", this.wsClose);
+      facews.addEventListener("error", this.wsError);
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -229,7 +242,7 @@ export default {
     },
     wsOpen(e) {
       console.log("connected! ", e);
-      let initParam = {
+      const initParam = {
         userid: store.state.userid,
         objectid: [""],
         type: "init"
@@ -781,6 +794,7 @@ export default {
         case "launch":
           //收到邀请 打开我的视角
           this.faceingObjId = res.objectid[0];
+          this.faceRequest = true;
           if (this.faceingObjId === this.choosenId) {
             this.showMyFaceTime(true);
           }
@@ -827,6 +841,7 @@ export default {
         type: "faceTime",
         state: "accept"
       };
+      this.faceRequest = false;
       this.wsSend(m);
       //开始视频聊天后 打开对方视角
       this.showObjFaceTime(true);
@@ -878,6 +893,7 @@ export default {
 </script>
 
 <style scoped>
+@import  '../../node_modules/animate.css/animate.css';
 .container {
   min-width: 400px;
   height: 100%;
@@ -906,7 +922,7 @@ export default {
 .controller img {
   width: 24px;
   height: 24px;
-  margin-top: 2px;
+  margin: 2px 6px 0;
   cursor: pointer;
 }
 .controller img:hover {
@@ -1196,11 +1212,47 @@ video {
 }
 video.mface {
   top: 0px;
-  width: 200px;
+  width: 400px;
+  height: 225px;
+  display: none;
+  z-index: 9;
+  border-radius: 6px;
 }
-video.oface {
-  top: 200px;
-  width: 200px;
+canvas.oface {
+  position: absolute;
+  width: 400px;
+  height: 225px;
+  left: calc(50% - 200px);
+  top: 225px;
+  display: none;
+  z-index: 9;
+  border-radius: 6px;
+}
+.mask{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+}
+.hangup{
+  width: 80px;
+  height: 80px;
+  z-index: 9;
+  position: absolute;
+  border-radius: 40px;
+  background: #fff;
+  bottom: 20px;
+  left: calc(50% - 40px);
+  cursor: pointer;
+  display: none;
+}
+.hangup img{
+  width: 50px;
+  height: 50px;
+  margin: 15px 0;
 }
 /* 这里新加了些样式 */
 canvas {
