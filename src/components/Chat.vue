@@ -220,7 +220,11 @@ export default {
   },
   methods: {
     onDelete() {
-      this.notedata = "";
+      if(this.faceRequest){
+        this.faceTimeReject();
+      } else{
+        this.notedata = "";
+      }
     },
     onInitWs() {
       ws = new WebSocket(WS_URL);
@@ -306,6 +310,10 @@ export default {
     //send方法中的逻辑都是相近的，都是发送的同时把数据存到本地
     wsSendText() {
       let choosenId = this.choosenId;
+      if(this.notedata===''){
+        alert('内容为空 无法发送');
+        return;
+      }
       let m = {
         mes: this.notedata,
         userid: store.state.userid,
@@ -918,6 +926,7 @@ export default {
 }
 .controller {
   float: right;
+  width: 108px;
 }
 .controller img {
   width: 24px;
@@ -938,7 +947,7 @@ export default {
 .phone-operate {
   float: left;
   /* display: inline-block; */
-  width: calc(50% - 40px);
+  width: calc(50% - 54px);
   line-height: 28px;
   text-align: center;
   cursor: pointer;
