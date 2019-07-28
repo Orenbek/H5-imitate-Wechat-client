@@ -107,8 +107,8 @@
           @touchend.prevent="onVideoMouseup"
         >{{btnVideo}}</div>
         <div class="controller">
-          <img v-if="faceingObjId===choosenId&&faceRequest" src="@/img/phone-call.png" class="animated infinite tada" alt="">
-          <img v-else @click="faceTimeStarted" src="@/img/phone.png" alt="">
+          <img v-if="faceingObjId===choosenId&&faceRequest" @click="faceTimeAccept" src="@/img/phone-call.png" class="animated infinite tada" alt="">
+          <img v-else @click="faceTimeLaunch" src="@/img/phone.png" alt="">
           <img @click="onDelete" src="@/img/delete.png" alt="清除" />
           <img @click="wsSendText" src="@/img/submit.png" alt="发送" />
         </div>
