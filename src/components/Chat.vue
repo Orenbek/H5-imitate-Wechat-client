@@ -117,7 +117,9 @@
     </div>
     <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="mask"></div>
     <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="hangup animated infinite pulse">
-      <img @click="faceTimeStop" src="@/img/hangup.png" alt="">
+      <img @click="faceTimeBreakOrCancle" src="@/img/hangup.png" alt="">
+    <img v-if="faceingObjId===choosenId&&faceRequest" @click="faceTimeAccept" src="@/img/phone-call.png" style="margin-left: 40px;" class="animated infinite tada" alt="">
+    <button @click="bb()">dddd</button>
     </div>
   </div>
 </template>
@@ -125,14 +127,18 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
-import { format } from "path";
+// import { format } from "path";
 import Trans from "@/assets/transport.js";
 import axios from "axios";
+
+let JSMpeg_wsonMessage = JSMpeg.Source.WebSocket.prototype.onMessage;
+let JSMpeg_wsonOpen;
+
 let ws, facews;
 
 const localServ = axios.create({
   baseURL: "http://127.0.0.1:5000/",
-  timeout: 1000
+  // timeout: 1000
 });
 const WS_URL = "ws://localhost:8000",
   FACEWS_URL = "ws://localhost:8002";
@@ -165,7 +171,8 @@ export default {
       buffImgArr: [],
       faceingObjId: "",
       faceStreamChunks: [],
-      faceRequest: false
+      faceRequest: false,
+      faceStart: false
       //为了本地测试
     };
   },
@@ -211,12 +218,6 @@ export default {
     this.requestVideoAccess();
     this.requestFaceTimeAccess();
     this.onInitWs();
-    this.faceTimePlayer = new JSMpeg.Player(FACEWS_URL, {
-      canvas: this.canvas,
-      videoBufferSize: 1024 * 512,
-      audioBufferSize: 1024,
-      progressive: false
-    });
   },
   methods: {
     onDelete() {
@@ -224,7 +225,11 @@ export default {
         this.faceTimeReject();
       } else{
         this.notedata = "";
+        console.log(this.faceTimePlayer.source===JSMpeg.Source.WebSocket)
       }
+    },
+    bb(){
+      this.faceTimePlayer.play();
     },
     onInitWs() {
       ws = new WebSocket(WS_URL);
@@ -233,10 +238,21 @@ export default {
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
-      facews.addEventListener("open", this.wsOpen);
-      facews.addEventListener("message", this.wsMessage);
-      facews.addEventListener("close", this.wsClose);
-      facews.addEventListener("error", this.wsError);
+      facews.addEventListener("open", this.wsOpen1);
+      facews.addEventListener("message", this.wsMessage1);
+      // facews.addEventListener("close", this.wsClose);
+      // facews.addEventListener("error", this.wsError);
+      this.faceTimePlayer = new JSMpeg.Player(facews,"",{
+        canvas: this.$refs.facetime2,
+        videoBufferSize: 1024 * 1024 * 32,
+        audioBufferSize: 1024 * 1024 * 8,
+        progressive: false,
+        autoplay: true
+      });
+      JSMpeg_wsonMessage = JSMpeg.Source.WebSocket.prototype.onMessage.bind(this.faceTimePlayer.source);
+      JSMpeg_wsonOpen = JSMpeg.Source.WebSocket.prototype.onOpen.bind(this.faceTimePlayer.source);
+      JSMpeg.Source.WebSocket.prototype.onMessage = this.wsMessage1;
+      JSMpeg.Source.WebSocket.prototype.onOpen = this.wsOpen1;
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -252,6 +268,16 @@ export default {
         type: "init"
       };
       this.wsSend(initParam);
+    },
+    wsOpen1(e) {
+      console.log("connected! ", e);
+      const initParam = {
+        userid: store.state.userid,
+        objectid: [""],
+        type: "init"
+      };
+      this.fwsSend(initParam);
+      JSMpeg_wsonOpen();
     },
     wsMessage(event) {
       if (typeof event.data === String) {
@@ -287,6 +313,16 @@ export default {
         }
       }
     },
+    wsMessage1(event) {
+      if (event.data instanceof ArrayBuffer) {
+        JSMpeg_wsonMessage(event);
+      } else{
+        console.log(typeof event.data);
+        console.log('Received String')
+        let result = JSON.parse(event.data);
+        this.wsFaceTimeMessage(result);
+      }
+    },
     wsClose(event) {
       console.log("已经关闭连接");
     },
@@ -300,6 +336,20 @@ export default {
           ws.send(blob);
         } else {
           ws.send(message);
+        }
+        //websocket每次只能传输一种数据类型(尝试了多种途径一次传输多个，但没有成功)
+      } else {
+        alert("已经断开socket连接，请重新连接websocket服务器");
+      }
+    },
+
+    fwsSend(message, blob) {
+      if (facews.readyState == WebSocket.OPEN) {
+        message = JSON.stringify(message);
+        if (blob) {
+          facews.send(blob);
+        } else {
+          facews.send(message);
         }
         //websocket每次只能传输一种数据类型(尝试了多种途径一次传输多个，但没有成功)
       } else {
@@ -429,8 +479,9 @@ export default {
       M = Array.from(new Set(M));
       this.$set(this.Messages, choosenId, M);
 
-      this.buffImgArr[choosenId] ? this.buffImgArr[choosenId] : [];
-      console.log("choosenId ", this.buffImgArr[choosenId]);
+      if(!this.buffImgArr[choosenId]){
+        this.buffImgArr[choosenId] = [];
+      }
       this.buffImgArr[choosenId].push(this.index[choosenId]);
       this.onCapture(choosenId);
       //生成截图
@@ -518,9 +569,10 @@ export default {
       this.$set(this.Messages, val.userid, M);
       //生成截图不能在这里写。因为截图是通过canvas生成的，得先canvas渲染。
       //在choosenID变化的时候再渲染当前的截图
-      this.buffImgArr[val.userid] !== undefined
-        ? this.buffImgArr[val.userid]
-        : [];
+      
+      if(!this.buffImgArr[val.userid]){
+        this.buffImgArr[val.userid] = [];
+      }
       this.buffImgArr[val.userid].push(this.index[val.userid]);
       if (val.userid === this.choosenId) {
         this.onCapture(val.userid);
@@ -529,7 +581,6 @@ export default {
       this.index[val.userid] += 1;
     },
     SendItBack(res) {
-      console.log(res);
       let par = this.bufferParam;
       par.random = res.random;
       ws.send(JSON.stringify(par));
@@ -736,8 +787,6 @@ export default {
     onCapture(userid) {
       let i;
       let buffArr = this.buffImgArr[userid];
-      console.log("12", this.buffImgArr);
-      console.log("333", this.Messages[userid]);
       for (i in buffArr) {
         let item = this.Messages[userid][buffArr[i]];
         this.ctx.drawImage(
@@ -760,7 +809,7 @@ export default {
     },
 
     requestFaceTimeAccess() {
-      navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(
+      navigator.mediaDevices.getUserMedia({ video: true }).then(
         faceStream => {
           // this.faceTimeRecorder = new window.MediaRecorder(faceStream);
           this.faceStream = faceStream;
@@ -803,16 +852,19 @@ export default {
           //收到邀请 打开我的视角
           this.faceingObjId = res.objectid[0];
           this.faceRequest = true;
-          if (this.faceingObjId === this.choosenId) {
             this.showMyFaceTime(true);
-          }
+          return;
+        case "cancle":
+          this.faceingObjId = '';
+          this.faceRequest = false;
+          this.showMyFaceTime(false);
           return;
         case "accept":
           //邀请被接受
           //这里开始录制并发送视频了
           //开始视频聊天后 打开对方视角
           this.showObjFaceTime(true);
-          this.faceTimeStarted();
+          // this.faceTimeStarted();
           return;
         case "reject":
           //邀请被拒绝
@@ -831,41 +883,53 @@ export default {
 
     faceTimeLaunch() {
       this.showMyFaceTime(true);
-      let m = {
+      const m = {
         userid: this.userid,
         objectid: [this.choosenId],
         type: "faceTime",
         state: "launch"
       };
-      this.wsSend(m);
+      this.fwsSend(m);
       this.faceingObjId = this.choosenId;
+    },
+
+    faceTimeCancle(){
+      this.showMyFaceTime(false);
+      const m = {
+        userid: this.userid,
+        objectid: [this.choosenId],
+        type: "faceTime",
+        state: "cancle"
+      }
+      this.fwsSend(m);
+      this.faceingObjId = '';
     },
 
     faceTimeAccept() {
       //给服务器发送接受FaceTime消息
-      let m = {
+      const m = {
         userid: this.userid,
         objectid: [this.choosenId],
         type: "faceTime",
         state: "accept"
       };
       this.faceRequest = false;
-      this.wsSend(m);
+      this.fwsSend(m);
+      this.faceTimeStarted();
       //开始视频聊天后 打开对方视角
       this.showObjFaceTime(true);
-      this.faceTimeStarted();
     },
 
     faceTimeReject() {
       //给服务器发送拒绝FaceTime消息
       this.showMyFaceTime(false);
-      let m = {
+      const m = {
         userid: this.userid,
         objectid: [this.choosenId],
         type: "faceTime",
         state: "reject"
       };
-      this.wsSend(m);
+      this.fwsSend(m);
       this.faceingObjId = "";
     },
 
@@ -873,23 +937,33 @@ export default {
       this.faceTimeStop();
       this.showMyFaceTime(false);
       this.showObjFaceTime(false);
-      let m = {
+      const m = {
         userid: this.userid,
         objectid: [this.choosenId],
         type: "faceTime",
         state: "break"
       };
-      this.wsSend(m);
+      this.fwsSend(m);
       this.faceingObjId = "";
     },
 
+    faceTimeBreakOrCancle(){
+      if(this.facestart){
+        this.faceTimeBreak()
+      } else{
+        this.faceTimeCancle();
+      }
+    },
+
     faceTimeStarted() {
+      this.faceStart = true;
       localServ.get("?run=1").then(res => {
         console.log(res.data.state);
       });
     },
 
     faceTimeStop() {
+      this.faceStart = false;
       localServ.get("").then(res => {
         console.log(res.data.state);
       });
