@@ -118,8 +118,6 @@
     <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="mask"></div>
     <div :style="faceingObjId===choosenId ? 'display:block;' : ''" class="hangup animated infinite pulse">
       <img @click="faceTimeBreakOrCancle" src="@/img/hangup.png" alt="">
-    <img v-if="faceingObjId===choosenId&&faceRequest" @click="faceTimeAccept" src="@/img/phone-call.png" style="margin-left: 40px;" class="animated infinite tada" alt="">
-    <button @click="bb()">dddd</button>
     </div>
   </div>
 </template>
@@ -127,11 +125,10 @@
 <script>
 import { onPost } from "@/services/api";
 import store from "@/store";
-// import { format } from "path";
 import Trans from "@/assets/transport.js";
 import axios from "axios";
 
-let JSMpeg_wsonMessage = JSMpeg.Source.WebSocket.prototype.onMessage;
+let JSMpeg_wsonMessage;
 let JSMpeg_wsonOpen;
 
 let ws, facews;
@@ -225,11 +222,7 @@ export default {
         this.faceTimeReject();
       } else{
         this.notedata = "";
-        console.log(this.faceTimePlayer.source===JSMpeg.Source.WebSocket)
       }
-    },
-    bb(){
-      this.faceTimePlayer.play();
     },
     onInitWs() {
       ws = new WebSocket(WS_URL);
@@ -238,21 +231,20 @@ export default {
       ws.addEventListener("message", this.wsMessage);
       ws.addEventListener("close", this.wsClose);
       ws.addEventListener("error", this.wsError);
-      facews.addEventListener("open", this.wsOpen1);
-      facews.addEventListener("message", this.wsMessage1);
+      facews.addEventListener("open", this.fwsOpen);
+      facews.addEventListener("message", this.fwsMessage);
       // facews.addEventListener("close", this.wsClose);
       // facews.addEventListener("error", this.wsError);
       this.faceTimePlayer = new JSMpeg.Player(facews,"",{
-        canvas: this.$refs.facetime2,
+        canvas: this.objfacetime,
         videoBufferSize: 1024 * 1024 * 32,
         audioBufferSize: 1024 * 1024 * 8,
-        progressive: false,
-        autoplay: true
+        progressive: false
       });
       JSMpeg_wsonMessage = JSMpeg.Source.WebSocket.prototype.onMessage.bind(this.faceTimePlayer.source);
       JSMpeg_wsonOpen = JSMpeg.Source.WebSocket.prototype.onOpen.bind(this.faceTimePlayer.source);
-      JSMpeg.Source.WebSocket.prototype.onMessage = this.wsMessage1;
-      JSMpeg.Source.WebSocket.prototype.onOpen = this.wsOpen1;
+      JSMpeg.Source.WebSocket.prototype.onMessage = this.fwsMessage;
+      JSMpeg.Source.WebSocket.prototype.onOpen = this.fwsOpen;
       //readyState属性返回实例对象的当前状态，共有四种。
       //CONNECTING：值为0，表示正在连接。
       //OPEN：值为1，表示连接成功，可以通信了。
@@ -269,7 +261,7 @@ export default {
       };
       this.wsSend(initParam);
     },
-    wsOpen1(e) {
+    fwsOpen(e) {
       console.log("connected! ", e);
       const initParam = {
         userid: store.state.userid,
@@ -313,12 +305,10 @@ export default {
         }
       }
     },
-    wsMessage1(event) {
+    fwsMessage(event) {
       if (event.data instanceof ArrayBuffer) {
         JSMpeg_wsonMessage(event);
       } else{
-        console.log(typeof event.data);
-        console.log('Received String')
         let result = JSON.parse(event.data);
         this.wsFaceTimeMessage(result);
       }
