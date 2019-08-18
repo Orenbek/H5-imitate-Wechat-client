@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # client
 
 ## Project setup
@@ -27,3 +28,6 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+=======
+# H5-imitate-Wechat-client
+>>>>>>> f2d44993102fd31d34901b39e2230778beceaf13
